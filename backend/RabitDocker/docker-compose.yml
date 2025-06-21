@@ -1,0 +1,16 @@
+version: "3.9"          # o la que uses habitualmente
+services:
+  rabbitmq:
+    image: rabbitmq:3-management       # incluye ya el plugin web
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"     # conexiones AMQP
+      - "15672:15672"   # panel web
+    environment:
+      RABBITMQ_DEFAULT_USER: admin     # usuario inicial
+      RABBITMQ_DEFAULT_PASS: admin123  # contraseña inicial
+    # opcional: persiste los datos en una carpeta local
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+volumes:
+  rabbitmq_data:
