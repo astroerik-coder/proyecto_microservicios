@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.pedidos.models.Pedido;
+import com.example.pedidos.models.dto.CrearPedidoDTO;
 import com.example.pedidos.repositories.PedidoRepository;
 import com.example.pedidos.state.EstadoFactory;
 import com.example.pedidos.state.EstadoPedidoState;
@@ -33,10 +34,17 @@ public class PedidoService {
     }
 
     // Crear nuevo pedido
-    public Pedido crearPedido(Pedido pedido) {
+    public Pedido crearPedido(CrearPedidoDTO dto) {
+        Pedido pedido = new Pedido();
+        pedido.setIdCliente(dto.getIdCliente());
+        pedido.setTotal(dto.getTotal());
         pedido.setEstado(new EstadoRecibido().nombreEstado());
+
         Pedido nuevo = pedidoRepository.save(pedido);
-        publisher.publicarPedidoCreado(nuevo);
+
+        // ✅ Publicar evento con detalle
+        publisher.publishCreated(nuevo, dto.getLineas());
+
         return nuevo;
     }
 

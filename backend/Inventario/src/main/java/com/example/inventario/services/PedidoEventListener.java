@@ -1,49 +1,41 @@
 package com.example.inventario.services;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.example.inventario.config.RabbitMQConfig;
-import com.example.inventario.models.dto.PedidoDTO;
-import com.example.inventario.models.dto.LineaPedidoDTO;
+import com.example.inventario.models.dto.ProductoConsultaEvent;
 import com.example.inventario.services.ProductoService;
-
+@Service
 public class PedidoEventListener {
+
     private final ProductoService productoService;
+    private final ProductoInfoPublisher publisher;
 
-    public PedidoEventListener(ProductoService productoService) {
+    @Autowired
+    public PedidoEventListener(ProductoService productoService, ProductoInfoPublisher publisher) {
         this.productoService = productoService;
+        this.publisher = publisher;
     }
 
-    @RabbitListener(queues = RabbitMQConfig.QUEUE_CREATED, containerFactory = "rabbitListenerContainerFactory")
-    public void onPedidoCreated(PedidoDTO evt) {
-        evt.getLineas().forEach(linea -> {
-            productoService.disminuirStock(linea.getIdProducto(), linea.getCantidad());
-            System.out.printf("Stock ↓ producto %d en %d unidades%n",
-                    linea.getIdProducto(), linea.getCantidad());
-        });
+    @RabbitListener(queues = RabbitMQConfig.QUEUE_PRODUCTO_CONSULTAR)
+    public void handleProductoConsulta(ProductoConsultaEvent evento) {
+        System.out.println("📥 Recibido producto.consultar para idProducto: " + evento.getIdProducto());
+
+        productoService.obtenerProductoPorId(evento.getIdProducto())
+            .ifPresentOrElse(producto -> {
+                publisher.publicarInfoProducto(
+                    evento.getIdPedido(),
+                    producto.getId(),
+                    producto.getNombre(),
+                    producto.getPrecio()
+                );
+            }, () -> {
+                System.out.println("⚠️ Producto no encontrado: " + evento.getIdProducto());
+                // Aquí podrías publicar un evento de error o dejar que MuleSoft intervenga.
+            });
     }
-
-    @RabbitListener(queues = RabbitMQConfig.QUEUE_RELEASE, containerFactory = "rabbitListenerContainerFactory")
-    public void onPedidoCancelled(PedidoDTO evt) {
-        evt.getLineas().forEach(linea -> {
-            productoService.liberarStock(linea.getIdProducto(), linea.getCantidad());
-            System.out.printf("Stock ↑ producto %d en %d unidades%n",
-                    linea.getIdProducto(), linea.getCantidad());
-        });
-    }
-
-    @RabbitListener(queues = RabbitMQConfig.QUEUE_CREATED)
-    public void manejarPedidoCreado(PedidoDTO pedido) {
-        System.out.println("📩 Pedido recibido por RabbitMQ - ID: " + pedido.getId());
-
-        pedido.getLineas().forEach(linea -> {
-            boolean exito = productoService.disminuirStock(linea.getIdProducto(), linea.getCantidad());
-            if (exito) {
-                System.out.println("✅ Stock disminuido para producto " + linea.getIdProducto());
-            } else {
-                System.out.println("⚠️ No se pudo disminuir stock para producto " + linea.getIdProducto());
-            }
-        });
-    }
-
 }
+
+

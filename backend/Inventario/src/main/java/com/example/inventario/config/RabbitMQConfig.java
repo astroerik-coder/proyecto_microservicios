@@ -22,6 +22,9 @@ public class RabbitMQConfig {
     public static final String QUEUE_RELEASE = "pedido.release.queue";
     public static final String ROUTING_RELEASE = "pedido.release";
 
+    public static final String QUEUE_PRODUCTO_CONSULTAR = "producto.consultar.queue";
+    public static final String ROUTING_PRODUCTO_CONSULTAR = "producto.consultar";
+
     @Bean
     public TopicExchange exchange() {
         return new TopicExchange(EXCHANGE);
@@ -64,5 +67,18 @@ public class RabbitMQConfig {
         f.setConnectionFactory(cf);
         f.setMessageConverter(conv);
         return f;
+    }
+
+    @Bean
+    public Queue queueProductoConsulta() {
+        return new Queue(QUEUE_PRODUCTO_CONSULTAR, false);
+    }
+
+    @Bean
+    public Binding bindingProductoConsulta(Queue queueProductoConsulta, TopicExchange exchange) {
+        return BindingBuilder
+                .bind(queueProductoConsulta)
+                .to(exchange)
+                .with(ROUTING_PRODUCTO_CONSULTAR);
     }
 }

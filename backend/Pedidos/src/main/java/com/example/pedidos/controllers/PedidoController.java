@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pedidos.models.Pedido;
+import com.example.pedidos.models.dto.CrearPedidoDTO;
 import com.example.pedidos.services.PedidoService;
 
 import io.swagger.annotations.Api;
@@ -35,8 +36,8 @@ public class PedidoController {
     @GetMapping
     @ApiOperation(value = "Listar todos los pedidos", notes = "Retorna una lista de todos los pedidos en el sistema")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Lista de pedidos obtenida exitosamente"),
-        @ApiResponse(code = 500, message = "Error interno del servidor")
+            @ApiResponse(code = 200, message = "Lista de pedidos obtenida exitosamente"),
+            @ApiResponse(code = 500, message = "Error interno del servidor")
     })
     public List<Pedido> listarPedidos() {
         return pedidoService.listarPedidos();
@@ -46,12 +47,11 @@ public class PedidoController {
     @GetMapping("/{id}")
     @ApiOperation(value = "Obtener pedido por ID", notes = "Retorna un pedido específico basado en su ID")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Pedido encontrado exitosamente"),
-        @ApiResponse(code = 404, message = "Pedido no encontrado")
+            @ApiResponse(code = 200, message = "Pedido encontrado exitosamente"),
+            @ApiResponse(code = 404, message = "Pedido no encontrado")
     })
     public ResponseEntity<?> obtenerPedido(
-            @ApiParam(value = "ID del pedido", required = true, example = "1") 
-            @PathVariable Long id) {
+            @ApiParam(value = "ID del pedido", required = true, example = "1") @PathVariable Long id) {
         Optional<Pedido> pedido = pedidoService.obtenerPedidoPorId(id);
         return pedido.isPresent()
                 ? ResponseEntity.ok(pedido.get())
@@ -60,16 +60,8 @@ public class PedidoController {
 
     // ✅ Crear nuevo pedido
     @PostMapping
-    @ApiOperation(value = "Crear nuevo pedido", notes = "Crea un nuevo pedido en el sistema")
-    @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Pedido creado exitosamente"),
-        @ApiResponse(code = 400, message = "Datos del pedido inválidos"),
-        @ApiResponse(code = 500, message = "Error interno del servidor")
-    })
-    public ResponseEntity<Pedido> crearPedido(
-            @ApiParam(value = "Datos del pedido a crear", required = true) 
-            @RequestBody Pedido pedido) {
-        Pedido nuevo = pedidoService.crearPedido(pedido);
+    public ResponseEntity<Pedido> crearPedido(@RequestBody CrearPedidoDTO dto) {
+        Pedido nuevo = pedidoService.crearPedido(dto);
         return ResponseEntity.ok(nuevo);
     }
 
@@ -77,13 +69,12 @@ public class PedidoController {
     @PutMapping("/{id}/avanzar")
     @ApiOperation(value = "Avanzar estado del pedido", notes = "Avanza el estado del pedido al siguiente nivel en el flujo de trabajo")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Estado del pedido avanzado exitosamente"),
-        @ApiResponse(code = 404, message = "Pedido no encontrado"),
-        @ApiResponse(code = 400, message = "No se puede avanzar el estado del pedido")
+            @ApiResponse(code = 200, message = "Estado del pedido avanzado exitosamente"),
+            @ApiResponse(code = 404, message = "Pedido no encontrado"),
+            @ApiResponse(code = 400, message = "No se puede avanzar el estado del pedido")
     })
     public ResponseEntity<?> avanzarEstado(
-            @ApiParam(value = "ID del pedido", required = true, example = "1") 
-            @PathVariable Long id) {
+            @ApiParam(value = "ID del pedido", required = true, example = "1") @PathVariable Long id) {
         Optional<Pedido> pedido = pedidoService.avanzarEstado(id);
         return pedido.isPresent()
                 ? ResponseEntity.ok(pedido.get())
@@ -94,13 +85,12 @@ public class PedidoController {
     @PutMapping("/{id}/cancelar")
     @ApiOperation(value = "Cancelar pedido", notes = "Cancela un pedido existente")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Pedido cancelado exitosamente"),
-        @ApiResponse(code = 404, message = "Pedido no encontrado"),
-        @ApiResponse(code = 400, message = "No se puede cancelar el pedido")
+            @ApiResponse(code = 200, message = "Pedido cancelado exitosamente"),
+            @ApiResponse(code = 404, message = "Pedido no encontrado"),
+            @ApiResponse(code = 400, message = "No se puede cancelar el pedido")
     })
     public ResponseEntity<?> cancelarPedido(
-            @ApiParam(value = "ID del pedido", required = true, example = "1") 
-            @PathVariable Long id) {
+            @ApiParam(value = "ID del pedido", required = true, example = "1") @PathVariable Long id) {
         Optional<Pedido> pedido = pedidoService.cancelarPedido(id);
         return pedido.isPresent()
                 ? ResponseEntity.ok(pedido.get())
@@ -111,12 +101,11 @@ public class PedidoController {
     @DeleteMapping("/{id}")
     @ApiOperation(value = "Eliminar pedido", notes = "Elimina lógicamente un pedido del sistema")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Pedido eliminado exitosamente"),
-        @ApiResponse(code = 404, message = "Pedido no encontrado")
+            @ApiResponse(code = 200, message = "Pedido eliminado exitosamente"),
+            @ApiResponse(code = 404, message = "Pedido no encontrado")
     })
     public ResponseEntity<?> eliminarPedido(
-            @ApiParam(value = "ID del pedido a eliminar", required = true, example = "1") 
-            @PathVariable Long id) {
+            @ApiParam(value = "ID del pedido a eliminar", required = true, example = "1") @PathVariable Long id) {
         boolean eliminado = pedidoService.eliminarPedido(id);
         return eliminado
                 ? ResponseEntity.ok("Pedido eliminado lógicamente.")

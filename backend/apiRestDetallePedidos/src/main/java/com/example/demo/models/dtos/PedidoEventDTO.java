@@ -1,15 +1,14 @@
-package com.example.inventario.models.dto;
+package com.example.demo.models.dtos;
 
 import java.util.List;
 
-public class PedidoDTO {
+public class PedidoEventDTO {
     private Long id;
     private Long idCliente;
-    private String estado;
     private Double total;
     private List<LineaPedidoDTO> lineas;
 
-    // Getters y setters
+    // Getter y Setter para id
     public Long getId() {
         return id;
     }
@@ -18,6 +17,7 @@ public class PedidoDTO {
         this.id = id;
     }
 
+    // Getter y Setter para idCliente
     public Long getIdCliente() {
         return idCliente;
     }
@@ -26,14 +26,7 @@ public class PedidoDTO {
         this.idCliente = idCliente;
     }
 
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
+    // Getter y Setter para total
     public Double getTotal() {
         return total;
     }
@@ -42,6 +35,7 @@ public class PedidoDTO {
         this.total = total;
     }
 
+    // Getter y Setter para lineas
     public List<LineaPedidoDTO> getLineas() {
         return lineas;
     }
@@ -49,5 +43,4 @@ public class PedidoDTO {
     public void setLineas(List<LineaPedidoDTO> lineas) {
         this.lineas = lineas;
     }
-
 }

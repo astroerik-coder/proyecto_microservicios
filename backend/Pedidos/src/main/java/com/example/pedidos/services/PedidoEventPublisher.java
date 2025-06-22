@@ -24,14 +24,6 @@ public class PedidoEventPublisher {
         this.rabbit = rabbit;
     }
 
-    public void publishCreated(Pedido pedido) {
-        PedidoEvent evt = mapToEvent(pedido);
-        rabbit.convertAndSend(
-                RabbitMQConfig.PEDIDO_EXCHANGE,
-                RabbitMQConfig.PEDIDO_CREATED_ROUTING_KEY,
-                evt);
-    }
-
     public void publishRelease(Pedido pedido) {
         PedidoEvent evt = mapToEvent(pedido);
         rabbit.convertAndSend(
@@ -50,12 +42,19 @@ public class PedidoEventPublisher {
         return e;
     }
 
-    public void publicarPedidoCreado(Pedido pedido) {
-        amqpTemplate.convertAndSend(
+    public void publishCreated(Pedido pedido, List<LineaPedidoDTO> lineas) {
+        PedidoEvent evt = new PedidoEvent();
+        evt.setId(pedido.getId());
+        evt.setIdCliente(pedido.getIdCliente());
+        evt.setTotal(pedido.getTotal());
+        evt.setLineas(lineas != null ? lineas : List.of());
+
+        rabbit.convertAndSend(
                 RabbitMQConfig.PEDIDO_EXCHANGE,
                 RabbitMQConfig.PEDIDO_CREATED_ROUTING_KEY,
-                pedido // O un DTO/JSON personalizado si lo prefieres
-        );
-        System.out.println("📤 Evento de pedido creado publicado.");
+                evt);
+
+        System.out.println("📤 Pedido creado publicado con detalle.");
     }
+
 }

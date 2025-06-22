@@ -1,8 +1,7 @@
-package com.example.pedidos.models.dto;
+package com.example.demo.models.dtos;
 
 public class LineaPedidoDTO {
     private Long idProducto;
-    private String nombreProducto;
     private Integer cantidad;
     private Double precioUnitario;
 
@@ -15,14 +14,6 @@ public class LineaPedidoDTO {
         this.idProducto = idProducto;
     }
 
-    // Getter y Setter para nombreProducto
-    public String getNombreProducto() {
-        return nombreProducto;
-    }
-
-    public void setNombreProducto(String nombreProducto) {
-        this.nombreProducto = nombreProducto;
-    }
 
     // Getter y Setter para cantidad
     public Integer getCantidad() {

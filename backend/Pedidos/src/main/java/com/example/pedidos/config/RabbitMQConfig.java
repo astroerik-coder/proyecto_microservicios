@@ -20,6 +20,9 @@ public class RabbitMQConfig {
     public static final String PEDIDO_QUEUE_RELEASE = "pedido.release.queue";
     public static final String PEDIDO_ROUTING_RELEASE = "pedido.release";
 
+    public static final String PEDIDO_RECALCULO_QUEUE = "pedido.recalculo.queue";
+    public static final String PEDIDO_RECALCULO_ROUTING_KEY = "pedido.recalcular_total";
+
     @Bean
     public TopicExchange exchange() {
         return new TopicExchange(PEDIDO_EXCHANGE);
@@ -33,8 +36,8 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindingCreated(Queue queueCreated, TopicExchange exchange) {
         return BindingBuilder.bind(queueCreated)
-                           .to(exchange)
-                           .with(PEDIDO_CREATED_ROUTING_KEY);
+                .to(exchange)
+                .with(PEDIDO_CREATED_ROUTING_KEY);
     }
 
     @Bean
@@ -45,8 +48,8 @@ public class RabbitMQConfig {
     @Bean
     public Binding bindingRelease(Queue queueRelease, TopicExchange exchange) {
         return BindingBuilder.bind(queueRelease)
-                           .to(exchange)
-                           .with(PEDIDO_ROUTING_RELEASE);
+                .to(exchange)
+                .with(PEDIDO_ROUTING_RELEASE);
     }
 
     @Bean
@@ -59,5 +62,18 @@ public class RabbitMQConfig {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(messageConverter());
         return template;
+    }
+
+    @Bean
+    public Queue pedidoRecalculoQueue() {
+        return new Queue(PEDIDO_RECALCULO_QUEUE, false);
+    }
+
+    @Bean
+    public Binding bindingPedidoRecalculo(Queue pedidoRecalculoQueue, TopicExchange exchange) {
+        return BindingBuilder
+                .bind(pedidoRecalculoQueue)
+                .to(exchange)
+                .with(PEDIDO_RECALCULO_ROUTING_KEY);
     }
 }

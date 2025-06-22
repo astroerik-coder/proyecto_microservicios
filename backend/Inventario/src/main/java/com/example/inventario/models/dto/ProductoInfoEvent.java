@@ -1,10 +1,19 @@
-package com.example.pedidos.models.dto;
+package com.example.inventario.models.dto;
 
-public class LineaPedidoDTO {
+public class ProductoInfoEvent {
+    private Long idPedido;
     private Long idProducto;
     private String nombreProducto;
-    private Integer cantidad;
     private Double precioUnitario;
+
+    // Getter y Setter para idPedido
+    public Long getIdPedido() {
+        return idPedido;
+    }
+
+    public void setIdPedido(Long idPedido) {
+        this.idPedido = idPedido;
+    }
 
     // Getter y Setter para idProducto
     public Long getIdProducto() {
@@ -22,15 +31,6 @@ public class LineaPedidoDTO {
 
     public void setNombreProducto(String nombreProducto) {
         this.nombreProducto = nombreProducto;
-    }
-
-    // Getter y Setter para cantidad
-    public Integer getCantidad() {
-        return cantidad;
-    }
-
-    public void setCantidad(Integer cantidad) {
-        this.cantidad = cantidad;
     }
 
     // Getter y Setter para precioUnitario
