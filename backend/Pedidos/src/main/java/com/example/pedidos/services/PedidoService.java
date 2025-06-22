@@ -11,6 +11,7 @@ import com.example.pedidos.models.Pedido;
 import com.example.pedidos.repositories.PedidoRepository;
 import com.example.pedidos.state.EstadoFactory;
 import com.example.pedidos.state.EstadoPedidoState;
+import com.example.pedidos.state.estados.EstadoRecibido;
 
 @Service
 public class PedidoService {
@@ -33,7 +34,7 @@ public class PedidoService {
 
     // Crear nuevo pedido
     public Pedido crearPedido(Pedido pedido) {
-        pedido.setEstado("CREATED");
+        pedido.setEstado(new EstadoRecibido().nombreEstado());
         Pedido nuevo = pedidoRepository.save(pedido);
         publisher.publicarPedidoCreado(nuevo);
         return nuevo;
@@ -46,7 +47,7 @@ public class PedidoService {
                 .map(p -> {
                     p.setEstado(nuevoEstado);
                     Pedido actualizado = pedidoRepository.save(p);
-                    if ("CANCELL".equalsIgnoreCase(nuevoEstado)) {
+                    if ("Cancelado".equalsIgnoreCase(nuevoEstado)) {
                         publisher.publishRelease(actualizado);
                     }
                     return actualizado;

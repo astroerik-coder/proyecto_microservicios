@@ -7,12 +7,14 @@ public class EstadoRecibido implements EstadoPedidoState {
 
     @Override
     public void avanzar(Pedido pedido) {
-        pedido.setEstado("Procesando");
+        EstadoProcesando siguiente = new EstadoProcesando();
+        pedido.setEstado(siguiente.nombreEstado());
     }
 
     @Override
     public void cancelar(Pedido pedido) {
-        pedido.setEstado("Cancelado");
+        EstadoCancelado siguiente = new EstadoCancelado();
+        pedido.setEstado(siguiente.nombreEstado());
     }
 
     @Override
