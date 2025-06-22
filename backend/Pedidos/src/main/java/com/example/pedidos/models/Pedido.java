@@ -3,25 +3,35 @@ package com.example.pedidos.models;
 import javax.persistence.*;
 import java.sql.Timestamp;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
 @Entity
 @Table(name = "pedidos")
+@ApiModel(description = "Modelo de Pedido para la gestión de pedidos")
 public class Pedido {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ApiModelProperty(value = "ID único del pedido", example = "1", readOnly = true)
     private Long id;
 
     @Column(name = "id_cliente", nullable = false)
+    @ApiModelProperty(value = "ID del cliente que realiza el pedido", example = "123", required = true)
     private Long idCliente;
 
     @Column(name = "fecha_pedido", nullable = false, updatable = false)
+    @ApiModelProperty(value = "Fecha y hora de creación del pedido", example = "2024-01-15T10:30:00", readOnly = true)
     private Timestamp fechaPedido;
 
     @Column(name = "estado")
+    @ApiModelProperty(value = "Estado actual del pedido", example = "Recibido", allowableValues = "Recibido,EnPreparacion,ListoParaEnvio,Enviado,Entregado,Cancelado")
     private String estado = "Recibido"; // Usaremos el patrón State para controlar esto
 
+    @ApiModelProperty(value = "Total del pedido", example = "299.99")
     private Double total = 0.0;
 
+    @ApiModelProperty(value = "Indica si el pedido está eliminado lógicamente", example = "false", readOnly = true)
     private Boolean eliminado = false;
 
     @PrePersist
