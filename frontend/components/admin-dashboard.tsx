@@ -12,6 +12,7 @@ import { useOrders } from "@/hooks/use-orders"
 import { useInventory } from "@/hooks/use-inventory"
 import OrderDetailsModal from "@/components/order-details-modal"
 import AlertModal from "@/components/alert-modal"
+import {InventarioTab} from "@/components/inventario/inventario-total"
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -206,47 +207,8 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-
-          <TabsContent value="inventory">
-            <Card>
-              <CardHeader>
-                <CardTitle>Inventario</CardTitle>
-                <CardDescription>Gestiona el stock de productos</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Producto</TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead>Stock Actual</TableHead>
-                      <TableHead>Precio</TableHead>
-                      <TableHead>Estado</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {inventory.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell>{item.sku}</TableCell>
-                        <TableCell>
-                          <span className={item.stock < 10 ? "text-red-600 font-semibold" : ""}>
-                            {item.stock} unidades
-                          </span>
-                        </TableCell>
-                        <TableCell>${item.price.toLocaleString()}</TableCell>
-                        <TableCell>
-                          <Badge variant={item.stock > 0 ? "default" : "destructive"}>
-                            {item.stock > 0 ? "Disponible" : "Agotado"}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          <InventarioTab />
+       
         </Tabs>
       </div>
 
