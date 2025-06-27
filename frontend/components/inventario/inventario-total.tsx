@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import { TabsContent } from "../ui/tabs";
 import {
   Card,
@@ -19,6 +18,19 @@ import {
 import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { inventarioAPI } from "@/lib/api";
+import { useInventarioSocket } from "@/hooks/useInventarioSocket";
+
+const PAGE_SIZE = 5;
+
+type InventarioItem = {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  stock: number;
+  precio: number;
+  eliminado?: boolean;
+};
 
 type PaginationProps = {
   page: number;
@@ -52,41 +64,43 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   );
 }
 
-import { inventarioAPI } from "@/lib/api";
-
-const PAGE_SIZE = 5;
-
-type InventarioItem = {
-  id: number;
-  nombre: string;
-  descripcion: string;
-  stock: number;
-  precio: number;
-  eliminado?: boolean;
-};
-
 export function InventarioTab() {
   const [inventory, setInventory] = useState<InventarioItem[]>([]);
   const [filtered, setFiltered] = useState<InventarioItem[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const productos = await inventarioAPI.getInventory();
-      const activos = productos.filter((p: InventarioItem) => !p.eliminado);
-      setInventory(activos);
-      setFiltered(activos);
-    };
-    fetchData();
-  }, []);
+  const fetchData = async () => {
+    const productos = await inventarioAPI.getInventory();
+    const activos = productos.filter((p: InventarioItem) => !p.eliminado);
+    setInventory(activos);
+    setFiltered(activos);
+  };
 
   useEffect(() => {
-    const results = inventory.filter((item) =>
+    fetchData();
+  }, [fetchData]);
+
+  useInventarioSocket((nuevoProducto: InventarioItem) => {
+    if (!nuevoProducto?.id) return;
+
+    setInventory((prev) => {
+      const yaExiste = prev.some((p) => p.id === nuevoProducto.id);
+      if (yaExiste) {
+        // Si ya existe, actualizar su información
+        return prev.map((p) => (p.id === nuevoProducto.id ? nuevoProducto : p));
+      } else {
+        // Si es nuevo, agregarlo al final
+        return [...prev, nuevoProducto];
+      }
+    });
+  });
+
+  useEffect(() => {
+    const resultados = inventory.filter((item) =>
       item.nombre.toLowerCase().includes(search.toLowerCase())
     );
-    setFiltered(results);
-    setPage(1);
+    setFiltered(resultados);
   }, [search, inventory]);
 
   const paginatedItems = filtered.slice(
