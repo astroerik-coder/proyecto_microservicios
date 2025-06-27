@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 21-06-2025 a las 21:02:58
+-- Tiempo de generación: 27-06-2025 a las 18:21:43
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.1.25
 
@@ -24,15 +24,20 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Estructura de tabla para la tabla `eventos_pedido`
+-- Estructura de tabla para la tabla `detalles_pedido`
 --
 
-CREATE TABLE `eventos_pedido` (
+CREATE TABLE `detalles_pedido` (
   `id` int(11) NOT NULL,
   `id_pedido` int(11) NOT NULL,
-  `evento` varchar(100) DEFAULT NULL,
-  `detalle` text DEFAULT NULL,
-  `fecha_evento` timestamp NOT NULL DEFAULT current_timestamp()
+  `id_producto` int(11) NOT NULL,
+  `nombre_producto` varchar(100) DEFAULT NULL,
+  `cantidad` int(11) NOT NULL,
+  `precio_unitario` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL,
+  `eliminado` tinyint(1) DEFAULT 0,
+  `creado_en` timestamp NOT NULL DEFAULT current_timestamp(),
+  `actualizado_en` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -51,65 +56,20 @@ CREATE TABLE `pedidos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Volcado de datos para la tabla `pedidos`
---
-
-INSERT INTO `pedidos` (`id`, `id_cliente`, `fecha_pedido`, `estado`, `total`, `eliminado`) VALUES
-(1, 1, '2025-06-21 01:32:43', 'Cancelado', 45.50, 1),
-(2, 1, '2025-06-21 17:20:21', 'Recibido', 45.50, 0),
-(3, 2, '2025-06-21 17:20:51', 'Recibido', 45.50, 0),
-(4, 2, '2025-06-21 17:21:08', 'Recibido', 45.50, 0),
-(5, 2, '2025-06-21 17:24:38', 'Recibido', 45.50, 0),
-(6, 2, '2025-06-21 17:25:24', 'Recibido', 45.50, 0),
-(7, 2, '2025-06-21 17:26:40', 'Recibido', 45.50, 0),
-(8, 3, '2025-06-21 17:29:01', 'Recibido', 45.50, 0);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `productos`
---
-
-CREATE TABLE `productos` (
-  `id` bigint(20) NOT NULL,
-  `actualizado_en` datetime DEFAULT NULL,
-  `creado_en` datetime DEFAULT NULL,
-  `descripcion` varchar(255) DEFAULT NULL,
-  `eliminado` bit(1) DEFAULT NULL,
-  `nombre` varchar(255) DEFAULT NULL,
-  `precio` double DEFAULT NULL,
-  `stock` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `productos`
---
-
-INSERT INTO `productos` (`id`, `actualizado_en`, `creado_en`, `descripcion`, `eliminado`, `nombre`, `precio`, `stock`) VALUES
-(1, '2025-06-21 14:01:59', '2025-06-21 14:01:59', 'Camisa de algodón manga larga', b'0', 'Camisa blanca', 15.99, 100);
-
---
 -- Índices para tablas volcadas
 --
 
 --
--- Indices de la tabla `eventos_pedido`
+-- Indices de la tabla `detalles_pedido`
 --
-ALTER TABLE `eventos_pedido`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `detalles_pedido`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_pedido` (`id_pedido`);
 
 --
 -- Indices de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_estado` (`estado`),
-  ADD KEY `idx_id_cliente` (`id_cliente`);
-
---
--- Indices de la tabla `productos`
---
-ALTER TABLE `productos`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -117,22 +77,26 @@ ALTER TABLE `productos`
 --
 
 --
--- AUTO_INCREMENT de la tabla `eventos_pedido`
+-- AUTO_INCREMENT de la tabla `detalles_pedido`
 --
-ALTER TABLE `eventos_pedido`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `detalles_pedido`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
--- AUTO_INCREMENT de la tabla `productos`
+-- Restricciones para tablas volcadas
 --
-ALTER TABLE `productos`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- Filtros para la tabla `detalles_pedido`
+--
+ALTER TABLE `detalles_pedido`
+  ADD CONSTRAINT `detalles_pedido_ibfk_1` FOREIGN KEY (`id_pedido`) REFERENCES `pedidos` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

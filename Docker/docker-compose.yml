@@ -18,7 +18,7 @@ services:
       - "8081:8081"
     environment:
       # RabbitMQ
-      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_HOST: rabbitmqw
       SPRING_RABBITMQ_USERNAME: admin
       SPRING_RABBITMQ_PASSWORD: admin123
       # Base de datos para pedidos
