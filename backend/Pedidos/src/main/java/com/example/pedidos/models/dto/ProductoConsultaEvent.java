@@ -1,4 +1,4 @@
-package com.example.detallePedidos.models.dtos;
+package com.example.pedidos.models.dto;
 
 public class ProductoConsultaEvent {
 
@@ -6,7 +6,6 @@ public class ProductoConsultaEvent {
     private Long idProducto;
     private Integer cantidad;
 
-    // Getter y Setter para idPedido
     public Long getIdPedido() {
         return idPedido;
     }
@@ -15,7 +14,6 @@ public class ProductoConsultaEvent {
         this.idPedido = idPedido;
     }
 
-    // Getter y Setter para idProducto
     public Long getIdProducto() {
         return idProducto;
     }
@@ -24,7 +22,6 @@ public class ProductoConsultaEvent {
         this.idProducto = idProducto;
     }
 
-    // Getter y Setter para cantidad
     public Integer getCantidad() {
         return cantidad;
     }

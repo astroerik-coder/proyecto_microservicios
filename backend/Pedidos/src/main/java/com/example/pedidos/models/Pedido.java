@@ -1,7 +1,12 @@
 package com.example.pedidos.models;
 
 import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -33,6 +38,23 @@ public class Pedido {
 
     @ApiModelProperty(value = "Indica si el pedido está eliminado lógicamente", example = "false", readOnly = true)
     private Boolean eliminado = false;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<DetallePedido> detalles = new ArrayList<>();
+
+    public List<DetallePedido> getDetalles() {
+        return detalles;
+    }
+
+    public void setDetalles(List<DetallePedido> detalles) {
+        this.detalles = detalles;
+    }
+
+        public void agregarDetalle(DetallePedido detalle) {
+        detalle.setPedido(this); // relación inversa
+        this.detalles.add(detalle);
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -87,4 +109,6 @@ public class Pedido {
     public void setEliminado(Boolean eliminado) {
         this.eliminado = eliminado;
     }
+
+
 }

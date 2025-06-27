@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.inventario.models.Producto;
 import com.example.inventario.repositories.ProductoRepository;
+import com.example.inventario.services.Publisher.ProductoActualizadoPublisher;
 
 @Service
 public class ProductoService {
@@ -72,17 +73,16 @@ public class ProductoService {
     }
 
     // Disminuir stock (por despacho)
-    public boolean disminuirStock(Long id, int cantidad) {
-        Optional<Producto> optional = productoRepository.findByIdAndEliminadoFalse(id);
-        if (optional.isPresent()) {
-            Producto producto = optional.get();
-            if (producto.getStock() >= cantidad) {
-                producto.setStock(producto.getStock() - cantidad);
-                productoRepository.save(producto);
-                return true;
-            }
-        }
-        return false;
+    public boolean disminuirStock(Long idProducto, Integer cantidad) {
+        return productoRepository.findById(idProducto)
+                .map(producto -> {
+                    if (producto.getStock() >= cantidad) {
+                        producto.setStock(producto.getStock() - cantidad);
+                        productoRepository.save(producto);
+                        return true;
+                    }
+                    return false;
+                }).orElse(false);
     }
 
     public boolean liberarStock(Long id, int cantidad) {

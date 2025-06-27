@@ -7,43 +7,69 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.pedidos.models.DetallePedido;
 import com.example.pedidos.models.Pedido;
 import com.example.pedidos.models.dto.CrearPedidoDTO;
+import com.example.pedidos.models.dto.LineaPedidoDTO;
 import com.example.pedidos.repositories.PedidoRepository;
 import com.example.pedidos.state.EstadoFactory;
 import com.example.pedidos.state.EstadoPedidoState;
-import com.example.pedidos.state.estados.EstadoRecibido;
 
 @Service
 public class PedidoService {
 
     @Autowired
     private PedidoRepository pedidoRepository;
-    @Autowired
-    private PedidoEventPublisher publisher;
 
-    // Listar todos los pedidos activos
+    @Autowired
+    private com.example.pedidos.services.Publisher.ProductoConsultaPublisher productoConsultaPublisher;
+
     public List<Pedido> listarPedidos() {
         return pedidoRepository.findByEliminadoFalse();
     }
 
-    // Obtener pedido por ID
     public Optional<Pedido> obtenerPedidoPorId(Long id) {
-        return pedidoRepository.findById(id)
-                .filter(p -> !p.getEliminado());
+        return pedidoRepository.findById(id).filter(p -> !p.getEliminado());
     }
 
-    // Crear nuevo pedido
+    @Transactional
     public Pedido crearPedido(CrearPedidoDTO dto) {
         Pedido pedido = new Pedido();
         pedido.setIdCliente(dto.getIdCliente());
-        pedido.setTotal(dto.getTotal());
-        pedido.setEstado(new EstadoRecibido().nombreEstado());
+        pedido.setEstado("Recibido");
 
-        Pedido nuevo = pedidoRepository.save(pedido);
+        double total = 0.0;
 
-        // ✅ Publicar evento con detalle
-        publisher.publishCreated(nuevo, dto.getLineas());
+        for (LineaPedidoDTO linea : dto.getLineas()) {
+            DetallePedido detalle = new DetallePedido();
+            detalle.setIdProducto(linea.getIdProducto());
+            detalle.setNombreProducto(linea.getNombreProducto());
+            detalle.setCantidad(linea.getCantidad());
+            detalle.setPrecioUnitario(linea.getPrecioUnitario());
+
+            double subtotal = linea.getCantidad() * linea.getPrecioUnitario();
+            detalle.setSubtotal(subtotal);
+
+            total += subtotal;
+
+            pedido.agregarDetalle(detalle);
+        }
+
+        pedido.setTotal(total);
+
+        Pedido nuevo = pedidoRepository.save(pedido); // guarda pedido y detalles por cascada
+
+        // ✅ Publicar eventos a RabbitMQ
+        for (DetallePedido detalle : nuevo.getDetalles()) {
+            productoConsultaPublisher.publicarSolicitud(
+                    nuevo.getId(),
+                    detalle.getIdProducto(),
+                    detalle.getCantidad());
+
+            productoConsultaPublisher.publicarDisminucionStock(
+                    detalle.getIdProducto(),
+                    detalle.getCantidad());
+        }
 
         return nuevo;
     }
@@ -54,47 +80,35 @@ public class PedidoService {
                 .filter(p -> !p.getEliminado())
                 .map(p -> {
                     p.setEstado(nuevoEstado);
-                    Pedido actualizado = pedidoRepository.save(p);
-                    if ("Cancelado".equalsIgnoreCase(nuevoEstado)) {
-                        publisher.publishRelease(actualizado);
-                    }
-                    return actualizado;
+                    return pedidoRepository.save(p);
                 });
     }
 
-    // Cambiar estado del pedido a siguiente (usar patrón State)
     public Optional<Pedido> avanzarEstado(Long id) {
-        Optional<Pedido> optional = obtenerPedidoPorId(id);
-        if (optional.isPresent()) {
-            Pedido pedido = optional.get();
-            EstadoPedidoState estadoActual = EstadoFactory.getEstado(pedido);
-            estadoActual.avanzar(pedido);
-            return Optional.of(pedidoRepository.save(pedido));
-        }
-        return Optional.empty();
+        return obtenerPedidoPorId(id)
+                .map(pedido -> {
+                    EstadoPedidoState estado = EstadoFactory.getEstado(pedido);
+                    estado.avanzar(pedido);
+                    return pedidoRepository.save(pedido);
+                });
     }
 
-    // Cancelar un pedido
     public Optional<Pedido> cancelarPedido(Long id) {
-        Optional<Pedido> optional = obtenerPedidoPorId(id);
-        if (optional.isPresent()) {
-            Pedido pedido = optional.get();
-            EstadoPedidoState estadoActual = EstadoFactory.getEstado(pedido);
-            estadoActual.cancelar(pedido);
-            return Optional.of(pedidoRepository.save(pedido));
-        }
-        return Optional.empty();
+        return obtenerPedidoPorId(id)
+                .map(pedido -> {
+                    EstadoPedidoState estado = EstadoFactory.getEstado(pedido);
+                    estado.cancelar(pedido);
+                    return pedidoRepository.save(pedido);
+                });
     }
 
-    // Eliminar lógicamente un pedido
     public boolean eliminarPedido(Long id) {
-        Optional<Pedido> optional = obtenerPedidoPorId(id);
-        if (optional.isPresent()) {
-            Pedido pedido = optional.get();
-            pedido.setEliminado(true);
-            pedidoRepository.save(pedido);
-            return true;
-        }
-        return false;
+        return obtenerPedidoPorId(id)
+                .map(p -> {
+                    p.setEliminado(true);
+                    pedidoRepository.save(p);
+                    return true;
+                })
+                .orElse(false);
     }
 }

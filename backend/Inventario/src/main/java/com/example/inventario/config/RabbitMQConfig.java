@@ -11,55 +11,49 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 
+/**
+ * Configuración de RabbitMQ para el microservicio de inventario.
+ * Define las colas y bindings que este servicio utiliza para:
+ * - Escuchar solicitudes de productos desde pedidos
+ * - Publicar respuestas con nombre y precio de productos
+ * 
+ * También configura el conversor JSON necesario para serializar/deserializar
+ * eventos.
+ */
 @Configuration
 public class RabbitMQConfig {
 
+    // Exchange principal que conecta todos los servicios por eventos
     public static final String EXCHANGE = "pedido.exchange";
 
-    public static final String QUEUE_CREATED = "pedido.created.queue";
-    public static final String ROUTING_CREATED = "pedido.created";
-
-    public static final String QUEUE_RELEASE = "pedido.release.queue";
-    public static final String ROUTING_RELEASE = "pedido.release";
-
+   
+    // Cola principal que escucha solicitudes de productos desde pedidos
     public static final String QUEUE_PRODUCTO_CONSULTAR = "producto.consultar.queue";
     public static final String ROUTING_PRODUCTO_CONSULTAR = "producto.consultar";
+    // Cola para disminuir stock de productos
+    public static final String QUEUE_STOCK_DISMINUIR = "stock.disminuir.queue";
+    public static final String ROUTING_STOCK_DISMINUIR = "stock.disminuir";
 
+    /**
+     * Define el exchange de tipo "topic" para el sistema.
+     */
     @Bean
     public TopicExchange exchange() {
         return new TopicExchange(EXCHANGE);
     }
 
-    @Bean
-    public Queue queueCreated() {
-        return new Queue(QUEUE_CREATED, false);
-    }
-
-    @Bean
-    public Binding bindingCreated(Queue queueCreated, TopicExchange exchange) {
-        return BindingBuilder.bind(queueCreated)
-                .to(exchange)
-                .with(ROUTING_CREATED);
-    }
-
-    @Bean
-    public Queue queueRelease() {
-        return new Queue(QUEUE_RELEASE, false);
-    }
-
-    @Bean
-    public Binding bindingRelease(Queue queueRelease, TopicExchange exchange) {
-        return BindingBuilder
-                .bind(queueRelease)
-                .to(exchange)
-                .with(ROUTING_RELEASE);
-    }
-
+    /**
+     * Conversor de mensajes JSON para enviar y recibir eventos como objetos Java.
+     */
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
+    /**
+     * Configura el contenedor que maneja los listeners de Rabbit,
+     * aplicando el conversor JSON para deserializar automáticamente los eventos.
+     */
     @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             ConnectionFactory cf, Jackson2JsonMessageConverter conv) {
@@ -69,6 +63,9 @@ public class RabbitMQConfig {
         return f;
     }
 
+    /**
+     * Cola que escucha las solicitudes de datos de productos desde pedidos.
+     */
     @Bean
     public Queue queueProductoConsulta() {
         return new Queue(QUEUE_PRODUCTO_CONSULTAR, false);
@@ -81,4 +78,23 @@ public class RabbitMQConfig {
                 .to(exchange)
                 .with(ROUTING_PRODUCTO_CONSULTAR);
     }
+
+    /**
+     * Cola que escucha las solicitudes de disminución de stock por despacho.
+     * Esta cola es utilizada por el microservicio de pedidos para notificar
+     * al inventario que se debe disminuir el stock de un producto.
+     */
+    @Bean
+    public Queue queueStockDisminuir() {
+        return new Queue(QUEUE_STOCK_DISMINUIR, false);
+    }
+
+    @Bean
+    public Binding bindingStockDisminuir(Queue queueStockDisminuir, TopicExchange exchange) {
+        return BindingBuilder
+                .bind(queueStockDisminuir)
+                .to(exchange)
+                .with(ROUTING_STOCK_DISMINUIR);
+    }
+
 }

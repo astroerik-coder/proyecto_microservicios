@@ -1,12 +1,12 @@
-package com.example.detallePedidos.models.dtos;
+package com.example.pedidos.models.dto;
 
 public class ProductoInfoEvent {
+
     private Long idPedido;
     private Long idProducto;
     private String nombreProducto;
     private Double precioUnitario;
 
-    // Getter y Setter para idPedido
     public Long getIdPedido() {
         return idPedido;
     }
@@ -15,7 +15,6 @@ public class ProductoInfoEvent {
         this.idPedido = idPedido;
     }
 
-    // Getter y Setter para idProducto
     public Long getIdProducto() {
         return idProducto;
     }
@@ -24,7 +23,6 @@ public class ProductoInfoEvent {
         this.idProducto = idProducto;
     }
 
-    // Getter y Setter para nombreProducto
     public String getNombreProducto() {
         return nombreProducto;
     }
@@ -33,7 +31,6 @@ public class ProductoInfoEvent {
         this.nombreProducto = nombreProducto;
     }
 
-    // Getter y Setter para precioUnitario
     public Double getPrecioUnitario() {
         return precioUnitario;
     }

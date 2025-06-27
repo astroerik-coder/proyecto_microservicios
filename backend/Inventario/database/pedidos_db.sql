@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 21-06-2025 a las 20:54:13
+-- Tiempo de generación: 27-06-2025 a las 18:21:43
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.1.25
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `detalle_pedido_db`
+-- Base de datos: `pedidos_db`
 --
 
 -- --------------------------------------------------------
@@ -40,12 +40,20 @@ CREATE TABLE `detalles_pedido` (
   `actualizado_en` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
 --
--- Volcado de datos para la tabla `detalles_pedido`
+-- Estructura de tabla para la tabla `pedidos`
 --
 
-INSERT INTO `detalles_pedido` (`id`, `id_pedido`, `id_producto`, `nombre_producto`, `cantidad`, `precio_unitario`, `subtotal`, `eliminado`, `creado_en`, `actualizado_en`) VALUES
-(1, 3, 7, 'Jabón antibacterial 500ml', 6, 2.60, 15.60, 0, '2025-06-21 03:57:26', '2025-06-21 03:59:42');
+CREATE TABLE `pedidos` (
+  `id` int(11) NOT NULL,
+  `id_cliente` int(11) NOT NULL,
+  `fecha_pedido` timestamp NOT NULL DEFAULT current_timestamp(),
+  `estado` enum('Recibido','Procesando','Listo para envío','Enviado','Cancelado') DEFAULT 'Recibido',
+  `total` decimal(10,2) DEFAULT 0.00,
+  `eliminado` tinyint(1) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Índices para tablas volcadas
@@ -56,8 +64,13 @@ INSERT INTO `detalles_pedido` (`id`, `id_pedido`, `id_producto`, `nombre_product
 --
 ALTER TABLE `detalles_pedido`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_pedido` (`id_pedido`),
-  ADD KEY `idx_producto` (`id_producto`);
+  ADD KEY `id_pedido` (`id_pedido`);
+
+--
+-- Indices de la tabla `pedidos`
+--
+ALTER TABLE `pedidos`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -67,7 +80,23 @@ ALTER TABLE `detalles_pedido`
 -- AUTO_INCREMENT de la tabla `detalles_pedido`
 --
 ALTER TABLE `detalles_pedido`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+
+--
+-- AUTO_INCREMENT de la tabla `pedidos`
+--
+ALTER TABLE `pedidos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `detalles_pedido`
+--
+ALTER TABLE `detalles_pedido`
+  ADD CONSTRAINT `detalles_pedido_ibfk_1` FOREIGN KEY (`id_pedido`) REFERENCES `pedidos` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
