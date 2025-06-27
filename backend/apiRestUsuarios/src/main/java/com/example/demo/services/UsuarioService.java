@@ -1,17 +1,12 @@
 package com.example.demo.services;
 
-import java.util.Optional;
-
-import com.example.demo.dto.RegistroRequest;
-import com.example.demo.dto.LoginRequest;
-import com.example.demo.dto.AuthResponse;
 import com.example.demo.models.Usuario;
 import com.example.demo.repositories.UsuarioRepository;
-import com.example.demo.security.JwtUtil;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UsuarioService {
@@ -19,44 +14,44 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
-    public AuthResponse registrarUsuario(RegistroRequest request) {
-        if (usuarioRepository.existsByNombreUsuario(request.getNombreUsuario())) {
-            throw new RuntimeException("Nombre de usuario ya existe.");
-        }
-        if (usuarioRepository.existsByCorreo(request.getCorreo())) {
-            throw new RuntimeException("El correo ya está registrado.");
-        }
-
-        Usuario usuario = new Usuario();
-        usuario.setNombreUsuario(request.getNombreUsuario());
-        usuario.setCorreo(request.getCorreo());
-        usuario.setContraseñaHash(passwordEncoder.encode(request.getContraseña()));
-        usuario.setRol(request.getRol());
-
-        usuarioRepository.save(usuario);
-
-        String token = jwtUtil.generarToken(usuario);
-        return new AuthResponse(token, usuario.getNombreUsuario(), usuario.getRol());
+    // ✅ Crear usuario sin login automático
+    public Usuario crearUsuario(Usuario usuario) {
+        return usuarioRepository.save(usuario);
     }
 
-    public AuthResponse login(LoginRequest request) {
-        Usuario usuario = usuarioRepository.findByNombreUsuario(request.getNombreUsuario())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
+    // ✅ Obtener todos los usuarios activos
+    public List<Usuario> obtenerTodosActivos() {
+        return usuarioRepository.findByActivoTrue();
+    }
 
-        if (!usuario.isActivo()) {
-            throw new RuntimeException("Usuario inactivo.");
-        }
+    // ✅ Buscar por ID
+    public Optional<Usuario> buscarPorId(Long id) {
+        return usuarioRepository.findById(id).filter(Usuario::isActivo);
+    }
 
-        if (!passwordEncoder.matches(request.getContraseña(), usuario.getContraseñaHash())) {
-            throw new RuntimeException("Contraseña incorrecta.");
-        }
+    // ✅ Actualizar
+    public Optional<Usuario> actualizarUsuario(Long id, Usuario actualizado) {
+        return usuarioRepository.findById(id)
+                .map(usuario -> {
+                    usuario.setNombreUsuario(actualizado.getNombreUsuario());
+                    usuario.setCorreo(actualizado.getCorreo());
+                    usuario.setRol(actualizado.getRol());
+                    usuario.setTelefono(actualizado.getTelefono());
+                    usuario.setDireccion(actualizado.getDireccion());
+                    usuario.setCedula(actualizado.getCedula());
+                    usuario.setGenero(actualizado.getGenero());
+                    usuario.setImagenUrl(actualizado.getImagenUrl());
+                    return usuarioRepository.save(usuario);
+                });
+    }
 
-        String token = jwtUtil.generarToken(usuario);
-        return new AuthResponse(token, usuario.getNombreUsuario(), usuario.getRol());
+    // ✅ Borrado lógico
+    public boolean eliminarUsuario(Long id) {
+        return usuarioRepository.findById(id)
+                .map(usuario -> {
+                    usuario.setActivo(false);
+                    usuarioRepository.save(usuario);
+                    return true;
+                }).orElse(false);
     }
 }

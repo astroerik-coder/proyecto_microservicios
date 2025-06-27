@@ -2,16 +2,18 @@ package com.example.demo.controllers;
 
 import com.example.demo.dto.RegistroRequest;
 import com.example.demo.dto.LoginRequest;
+import com.example.demo.dto.ActualizarPasswordRequest;
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.models.Usuario;
 import com.example.demo.repositories.UsuarioRepository;
 import com.example.demo.security.JwtUtil;
-import com.example.demo.services.UsuarioService;
+import com.example.demo.services.AuthService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -19,7 +21,7 @@ import java.util.Optional;
 public class AuthController {
 
     @Autowired
-    private UsuarioService usuarioService;
+    private AuthService usuarioService;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -29,50 +31,31 @@ public class AuthController {
 
     // ✅ Registrar usuario
     @PostMapping("/registro")
-    public ResponseEntity<AuthResponse> registrar(@RequestBody RegistroRequest request) {
-        AuthResponse response = usuarioService.registrarUsuario(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> registrar(@RequestBody RegistroRequest request) {
+        try {
+            AuthResponse response = usuarioService.registrarUsuario(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Registro inválido",
+                    "message", ex.getMessage()));
+        }
     }
 
-    // ✅ Login usuario
+    // Login usuario
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-        AuthResponse response = usuarioService.login(request);
-        return ResponseEntity.ok(response);
-    }
-
-    // ✅ Editar usuario (por ID)
-    @PutMapping("/{id}")
-    public ResponseEntity<?> actualizarUsuario(@PathVariable Long id, @RequestBody RegistroRequest request) {
-        Optional<Usuario> optionalUsuario = usuarioRepository.findById(id);
-        if (optionalUsuario.isEmpty()) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            AuthResponse response = usuarioService.login(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Credenciales inválidas",
+                    "message", ex.getMessage()));
         }
-
-        Usuario usuario = optionalUsuario.get();
-        usuario.setNombreUsuario(request.getNombreUsuario());
-        usuario.setCorreo(request.getCorreo());
-        usuario.setRol(request.getRol());
-
-        usuarioRepository.save(usuario);
-        return ResponseEntity.ok("Usuario actualizado.");
     }
 
-    // ✅ Eliminar usuario lógicamente (activo = false)
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminarUsuario(@PathVariable Long id) {
-        Optional<Usuario> optionalUsuario = usuarioRepository.findById(id);
-        if (optionalUsuario.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Usuario usuario = optionalUsuario.get();
-        usuario.setActivo(false);
-        usuarioRepository.save(usuario);
-        return ResponseEntity.ok("Usuario desactivado.");
-    }
-
-    // ✅ (Opcional) Obtener datos desde JWT
+    // (Opcional) Obtener datos desde JWT
     @GetMapping("/perfil")
     public ResponseEntity<?> obtenerPerfil(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -85,4 +68,27 @@ public class AuthController {
 
         return ResponseEntity.ok("Usuario: " + username + ", Rol: " + rol);
     }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> actualizarPassword(
+            @PathVariable Long id,
+            @RequestBody ActualizarPasswordRequest request) {
+
+        try {
+            boolean actualizado = usuarioService.actualizarPassword(
+                    id,
+                    request.getContraseñaActual(),
+                    request.getNuevaContraseña());
+
+            return actualizado
+                    ? ResponseEntity.ok("Contraseña actualizada correctamente.")
+                    : ResponseEntity.notFound().build();
+
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Validación fallida",
+                    "message", ex.getMessage()));
+        }
+    }
+
 }

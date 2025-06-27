@@ -1,5 +1,6 @@
 package com.example.demo.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +18,11 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByNombreUsuario(String nombreUsuario);
 
     boolean existsByCorreo(String correo);
+
+    // Buscar usuarios activos
+    List<Usuario> findByActivoTrue();
+
+    // Buscar por rol
+    List<Usuario> findByRolAndActivoTrue(String rol);
+
 }

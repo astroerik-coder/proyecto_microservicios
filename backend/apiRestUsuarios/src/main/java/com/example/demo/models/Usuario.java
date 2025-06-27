@@ -1,9 +1,8 @@
 package com.example.demo.models;
 
+import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import javax.persistence.*;
-
 
 @Entity
 @Table(name = "usuarios")
@@ -23,9 +22,24 @@ public class Usuario {
     private String contraseñaHash;
 
     @Column(nullable = false)
-    private String rol;
+    private String rol; // CLIENTE, ADMIN, etc.
 
     private boolean activo = true;
+
+    // Campos nuevos y útiles
+    private String telefono;
+
+    @Column(length = 20)
+    private String cedula;
+
+    @Column(length = 200)
+    private String direccion;
+
+    private String genero;
+
+
+    @Column(name = "imagen_url")
+    private String imagenUrl;
 
     @Column(name = "creado_en", updatable = false)
     private Timestamp creadoEn = Timestamp.valueOf(LocalDateTime.now());
@@ -34,10 +48,6 @@ public class Usuario {
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getNombreUsuario() {
@@ -78,6 +88,47 @@ public class Usuario {
 
     public void setActivo(boolean activo) {
         this.activo = activo;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public String getCedula() {
+        return cedula;
+    }
+
+    public void setCedula(String cedula) {
+        this.cedula = cedula;
+    }
+
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+
+    public String getGenero() {
+        return genero;
+    }
+
+    public void setGenero(String genero) {
+        this.genero = genero;
+    }
+
+
+    public String getImagenUrl() {
+        return imagenUrl;
+    }
+
+    public void setImagenUrl(String imagenUrl) {
+        this.imagenUrl = imagenUrl;
     }
 
     public Timestamp getCreadoEn() {
