@@ -15,6 +15,9 @@ public class ProductoService {
     @Autowired
     private ProductoRepository productoRepository;
 
+    @Autowired
+    private ProductoActualizadoPublisher productoActualizadoPublisher;
+
     // Listar todos los productos no eliminados
     public List<Producto> listarProductos() {
         return productoRepository.findByEliminadoFalse();
@@ -32,7 +35,9 @@ public class ProductoService {
 
     // Crear producto
     public Producto crearProducto(Producto producto) {
-        return productoRepository.save(producto);
+        Producto creado = productoRepository.save(producto);
+        productoActualizadoPublisher.publicarProductoActualizado(creado);
+        return creado;
     }
 
     // Actualizar producto existente
@@ -44,7 +49,11 @@ public class ProductoService {
             producto.setDescripcion(datosActualizados.getDescripcion());
             producto.setPrecio(datosActualizados.getPrecio());
             producto.setStock(datosActualizados.getStock());
-            return Optional.of(productoRepository.save(producto));
+
+            Producto actualizado = productoRepository.save(producto);
+            productoActualizadoPublisher.publicarProductoActualizado(actualizado);
+
+            return Optional.of(actualizado);
         }
         return Optional.empty();
     }
@@ -56,6 +65,7 @@ public class ProductoService {
             Producto producto = optional.get();
             producto.setEliminado(true);
             productoRepository.save(producto);
+            productoActualizadoPublisher.publicarProductoActualizado(producto);
             return true;
         }
         return false;

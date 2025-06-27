@@ -16,7 +16,7 @@ public class PedidoEventListener {
     private DetallePedidoService detalleService;
 
     @Autowired
-    private ProductoEventPublisher productoPublisher;
+    private ProductoActualizadoPublisher productoPublisher;
 
     @RabbitListener(queues = RabbitMQConfig.PEDIDO_CREATED_QUEUE)
     public void handlePedidoCreated(PedidoEventDTO evento) {
