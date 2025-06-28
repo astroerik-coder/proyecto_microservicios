@@ -146,7 +146,7 @@ export default function ClientDashboard() {
                   Tienda Online
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Bienvenido, {user?.name}
+                  Bienvenido, {user?.nombreUsuario}
                 </p>
               </div>
             </div>

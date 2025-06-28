@@ -52,4 +52,14 @@ public class JwtUtil {
                 .getBody()
                 .get("rol");
     }
+
+    public Long extraerIdUsuario(String token) {
+        return ((Number) Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("id")).longValue();
+    }
+
 }

@@ -60,13 +60,18 @@ public class AuthController {
     public ResponseEntity<?> obtenerPerfil(@RequestHeader("Authorization") String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         if (!jwtUtil.validarToken(token)) {
-            return ResponseEntity.status(401).body("Token inválido");
+            return ResponseEntity.status(401).body(Map.of(
+                    "error", "Token inválido"));
         }
 
         String username = jwtUtil.extraerNombreUsuario(token);
         String rol = jwtUtil.extraerRol(token);
+        Long id = jwtUtil.extraerIdUsuario(token);
 
-        return ResponseEntity.ok("Usuario: " + username + ", Rol: " + rol);
+        return ResponseEntity.ok(Map.of(
+                "id", id,
+                "nombreUsuario", username,
+                "rol", rol));
     }
 
     @PutMapping("/{id}/password")

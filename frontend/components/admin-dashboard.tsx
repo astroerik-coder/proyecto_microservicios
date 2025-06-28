@@ -129,7 +129,7 @@ export default function AdminDashboard() {
                   Panel Administrativo
                 </h1>
                 <p className="text-sm text-gray-500">
-                  Bienvenido, {user?.name}
+                  Bienvenido, {user?.nombreUsuario}
                 </p>
               </div>
             </div>

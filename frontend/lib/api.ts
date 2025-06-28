@@ -1,15 +1,25 @@
 // Simulación de API para conectar con microservicios Spring Boot
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
 const API_INVENTORY =
   process.env.API_MICRO_INVENTORY ?? "http://localhost:8084/api";
 
-// Configuración de headers para las peticiones
-const getHeaders = () => ({
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-});
+const API_AUTH = process.env.API_MICRO_AUTH ?? "http://localhost:8080/api";
 
+// Configuración de headers para las peticiones
+const getHeaders = () => {
+  const token = localStorage.getItem("token");
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
+};
+
+/* 
 // Servicio de Órdenes
 export const ordersAPI = {
   // Crear nueva orden
@@ -153,36 +163,6 @@ export const shippingAPI = {
   },
 };
 
-// Servicio de Autenticación
-export const authAPI = {
-  // Login
-  login: async (credentials: { email: string; password: string }) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(credentials),
-    });
-    return response.json();
-  },
-
-  // Logout
-  logout: async () => {
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: "POST",
-      headers: getHeaders(),
-    });
-    return response.json();
-  },
-
-  // Verificar token
-  verifyToken: async () => {
-    const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-      headers: getHeaders(),
-    });
-    return response.json();
-  },
-};
-
 // Utilidades para manejo de errores
 export const handleAPIError = (error: any) => {
   console.error("API Error:", error);
@@ -232,7 +212,7 @@ export const rabbitMQEvents = {
     return eventSource;
   },
 };
-
+ */
 //Inventario
 export const inventarioAPI = {
   // Insertar producto
@@ -297,5 +277,48 @@ export const inventarioAPI = {
     });
     const data = await response.json();
     return data;
+  },
+};
+
+export const authAPI = {
+  // Login
+  login: async (credentials: { nombreUsuario: string; contraseña: string }) => {
+    const response = await fetch(`${API_AUTH}/auth/login`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(credentials),
+    });
+    return response;
+  },
+
+  // Registro como CLIENTE
+  register: async (data: {
+    nombreUsuario: string;
+    correo: string;
+    contraseña: string;
+    rol: string;
+  }) => {
+    const response = await fetch(`${API_AUTH}/auth/registro`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    return response;
+  },
+  // Perfil
+  perfil: async () => {
+    const response = await fetch(`${API_AUTH}/auth/perfil`, {
+      headers: getHeaders(),
+    });
+    return response.json();
+  },
+
+  // Logout (opcional)
+  logout: async () => {
+    const response = await fetch(`${API_AUTH}/auth/logout`, {
+      method: "POST",
+      headers: getHeaders(),
+    });
+    return response.json();
   },
 };
