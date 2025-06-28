@@ -17,13 +17,15 @@ import com.example.pedidos.state.EstadoFactory;
 import com.example.pedidos.state.EstadoPedidoState;
 
 /**
- * Listener que se activa cuando llega un mensaje de tipo "producto.info" desde el microservicio de inventario.
- * Este mensaje contiene información faltante de un producto en un pedido (nombre y precio).
+ * Listener que se activa cuando llega un mensaje de tipo "producto.info" desde
+ * el microservicio de inventario.
+ * Este mensaje contiene información faltante de un producto en un pedido
+ * (nombre y precio).
  * 
  * Objetivo:
  * - Completar el detalle del producto.
  * - Recalcular el total del pedido cuando todos los productos estén completos.
- * - Avanzar automáticamente el estado del pedido.
+ * - Avanzar automáticamente el estado del pedido a "Listo para despachar".
  */
 @Service
 public class ProductoInfoListener {
@@ -68,19 +70,20 @@ public class ProductoInfoListener {
                 .anyMatch(d -> d.getPrecioUnitario() == null || d.getPrecioUnitario() == 0.0);
 
         if (!incompleto) {
-            // Si todos tienen precios, calcula el total del pedido
-            double total = detalles.stream().mapToDouble(DetallePedido::getSubtotal).sum();
-
             Pedido pedido = pedidoRepo.findById(evento.getIdPedido()).orElse(null);
             if (pedido != null) {
-                pedido.setTotal(total);
+                pedido.setTotal(detalles.stream().mapToDouble(DetallePedido::getSubtotal).sum());
 
-                // Avanza el estado del pedido (por ejemplo, de "Recibido" a "Procesando")
-                EstadoPedidoState estado = EstadoFactory.getEstado(pedido);
-                estado.avanzar(pedido);
+                if ("Recibido".equalsIgnoreCase(pedido.getEstado())) {
+                    EstadoPedidoState estado = EstadoFactory.getEstado(pedido);
+                    estado.avanzar(pedido); // De "Recibido" → "Procesando"
+                    pedido.setEstado("Listo para despachar"); // Forzamos este estado
+                    System.out.println("✅ Estado cambiado a 'Listo para despachar'");
+                } else {
+                    System.out.println("ℹ️ No se avanzó el estado. Estado actual: " + pedido.getEstado());
+                }
 
                 pedidoRepo.save(pedido);
-                System.out.println("✅ Total actualizado y estado avanzado.");
             }
         }
     }

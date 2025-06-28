@@ -11,6 +11,10 @@ public class EstadoFactory {
                 return new EstadoRecibido();
             case "Procesando":
                 return new EstadoProcesando();
+            case "Listo para despachar":
+                return new EstadoListoParaDespachar();
+            case "Listo para pagar":
+                return new EstadoListoParaPagar();
             case "Listo para envío":
                 return new EstadoListoParaEnvio();
             case "Enviado":
@@ -20,6 +24,7 @@ public class EstadoFactory {
             default:
                 throw new IllegalStateException("Estado desconocido: " + pedido.getEstado());
         }
+
     }
 
 }
