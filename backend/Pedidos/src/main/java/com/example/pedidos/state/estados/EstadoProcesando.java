@@ -7,7 +7,7 @@ public class EstadoProcesando implements EstadoPedidoState {
 
     @Override
     public void avanzar(Pedido pedido) {
-        EstadoListoParaEnvio siguiente = new EstadoListoParaEnvio();
+        EstadoListoParaDespachar siguiente = new EstadoListoParaDespachar();
         pedido.setEstado(siguiente.nombreEstado());
     }
 

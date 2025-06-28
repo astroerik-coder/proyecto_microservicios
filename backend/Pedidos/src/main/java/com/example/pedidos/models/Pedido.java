@@ -30,7 +30,7 @@ public class Pedido {
     private Timestamp fechaPedido;
 
     @Column(name = "estado")
-    @ApiModelProperty(value = "Estado actual del pedido", example = "Recibido", allowableValues = "Recibido,EnPreparacion,ListoParaEnvio,Enviado,Entregado,Cancelado")
+    @ApiModelProperty(value = "Estado actual del pedido", example = "Recibido", allowableValues = "Recibido,Procesando,Listo para despachar,Listo para pagar,Listo para envío,Enviado,Cancelado")
     private String estado = "Recibido"; // Usaremos el patrón State para controlar esto
 
     @ApiModelProperty(value = "Total del pedido", example = "299.99")
@@ -51,7 +51,7 @@ public class Pedido {
         this.detalles = detalles;
     }
 
-        public void agregarDetalle(DetallePedido detalle) {
+    public void agregarDetalle(DetallePedido detalle) {
         detalle.setPedido(this); // relación inversa
         this.detalles.add(detalle);
     }
@@ -109,6 +109,5 @@ public class Pedido {
     public void setEliminado(Boolean eliminado) {
         this.eliminado = eliminado;
     }
-
 
 }
