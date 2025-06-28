@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 27-06-2025 a las 18:21:43
+-- Tiempo de generación: 28-06-2025 a las 08:41:05
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.1.25
 
@@ -50,7 +50,7 @@ CREATE TABLE `pedidos` (
   `id` int(11) NOT NULL,
   `id_cliente` int(11) NOT NULL,
   `fecha_pedido` timestamp NOT NULL DEFAULT current_timestamp(),
-  `estado` enum('Recibido','Procesando','Listo para envío','Enviado','Cancelado') DEFAULT 'Recibido',
+  `estado` enum('Recibido','Procesando','Listo para despachar','Listo para pagar','Enviado','Cancelado') DEFAULT NULL,
   `total` decimal(10,2) DEFAULT 0.00,
   `eliminado` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -80,13 +80,13 @@ ALTER TABLE `pedidos`
 -- AUTO_INCREMENT de la tabla `detalles_pedido`
 --
 ALTER TABLE `detalles_pedido`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- AUTO_INCREMENT de la tabla `pedidos`
 --
 ALTER TABLE `pedidos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- Restricciones para tablas volcadas

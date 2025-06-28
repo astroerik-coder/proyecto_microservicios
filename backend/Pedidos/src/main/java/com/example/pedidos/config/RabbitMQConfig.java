@@ -39,6 +39,14 @@ public class RabbitMQConfig {
     // Routing key utilizada para solicitar disminución de stock en inventario
     public static final String ROUTING_STOCK_DISMINUIR = "stock.disminuir";
 
+    // Nombre de la cola donde este servicio escucha eventos de productos listos
+    // para pagar
+    public static final String QUEUE_LISTO_PARA_PAGAR = "pedido.listo_para_pagar.queue";
+    public static final String ROUTING_LISTO_PARA_PAGAR = "pedido.listo_para_pagar";
+    // Nombre de la cola donde este servicio escucha eventos de pago exitoso
+    public static final String QUEUE_PAGO_EXITOSO = "pago.exitoso.queue";
+    public static final String ROUTING_PAGO_EXITOSO = "pago.exitoso";
+
     /**
      * Crea un exchange tipo "topic" para publicar y suscribirse a eventos.
      */
@@ -76,19 +84,23 @@ public class RabbitMQConfig {
     public Jackson2JsonMessageConverter jsonMessageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
 
-        // Clase responsable de traducir el __TypeId__ del mensaje a una clase local
         DefaultClassMapper classMapper = new DefaultClassMapper();
         Map<String, Class<?>> idClassMapping = new HashMap<>();
 
-        // Mapeo explícito: el productor envía ProductoInfoEvent con este paquete...
         idClassMapping.put(
                 "com.example.inventario.models.dto.ProductoInfoEvent",
-                com.example.pedidos.models.dto.ProductoInfoEvent.class // ...y lo interpretamos con esta clase local
-        );
+                com.example.pedidos.models.dto.ProductoInfoEvent.class);
 
+        // ✅ CORRECTO: mapeo cruzado entre paquete del productor y clase del consumidor
+        idClassMapping.put(
+                "com.example.demo.models.dto.PedidoListoParaPagarEvent",
+                com.example.pedidos.models.dto.PedidoListoParaPagarEvent.class);
+
+        idClassMapping.put(
+            "com.example.demo.models.dto.PagoExitosoEvent",
+            com.example.pedidos.models.dto.PagoExitosoEvent.class); // 👈 Este es el importante
         classMapper.setIdClassMapping(idClassMapping);
         converter.setClassMapper(classMapper);
-
         return converter;
     }
 
@@ -101,5 +113,37 @@ public class RabbitMQConfig {
         RabbitTemplate template = new RabbitTemplate(factory);
         template.setMessageConverter(jsonMessageConverter());
         return template;
+    }
+
+    /**
+     * Cola donde este microservicio escucha eventos de pedidos listos para pagar.
+     * Se usa para avanzar el estado del pedido a "Listo para envío".
+     */
+    @Bean
+    public Queue queuePedidoListoParaPagar() {
+        return new Queue(QUEUE_LISTO_PARA_PAGAR, false);
+    }
+
+    @Bean
+    public Binding bindingPedidoListoParaPagar(Queue queuePedidoListoParaPagar, TopicExchange exchange) {
+        return BindingBuilder.bind(queuePedidoListoParaPagar)
+                .to(exchange)
+                .with(ROUTING_LISTO_PARA_PAGAR);
+    }
+
+    /**
+     * Cola donde este microservicio escucha eventos de pago exitoso.
+     * Se usa para avanzar el estado del pedido a "Enviado".
+     */
+    @Bean
+    public Queue queuePagoExitoso() {
+        return new Queue(QUEUE_PAGO_EXITOSO, false);
+    }
+
+    @Bean
+    public Binding bindingPagoExitoso(Queue queuePagoExitoso, TopicExchange exchange) {
+        return BindingBuilder.bind(queuePagoExitoso)
+                .to(exchange)
+                .with(ROUTING_PAGO_EXITOSO);
     }
 }

@@ -15,8 +15,6 @@ public class EstadoFactory {
                 return new EstadoListoParaDespachar();
             case "Listo para pagar":
                 return new EstadoListoParaPagar();
-            case "Listo para envío":
-                return new EstadoListoParaEnvio();
             case "Enviado":
                 return new EstadoEnviado();
             case "Cancelado":

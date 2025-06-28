@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.example.demo.models.Despacho;
 import com.example.demo.models.EstadoDespacho;
 import com.example.demo.repositories.DespachoRepository;
+import com.example.demo.services.Publisher.PedidoListoParaPagarPublisher;
 import com.state.DespachoContext;
 
 @Service
@@ -16,6 +17,8 @@ public class DespachoService {
 
     @Autowired
     private DespachoRepository despachoRepository;
+    @Autowired
+    private PedidoListoParaPagarPublisher pedidoListoParaPagarPublisher;
 
     public List<Despacho> listarTodos() {
         return despachoRepository.findByEliminadoFalse();
@@ -51,6 +54,12 @@ public class DespachoService {
             boolean exito = ctx.avanzar(despacho);
             if (!exito)
                 return Optional.empty();
+
+            // Publicar solo si llega a LISTO_PARA_ENVIO
+            if (despacho.getEstado() == EstadoDespacho.LISTO_PARA_ENVIO) {
+                pedidoListoParaPagarPublisher.publicar(despacho.getIdPedido());
+            }
+
             despachoRepository.save(despacho);
             return Optional.of(despacho);
         });

@@ -30,7 +30,7 @@ public class Pedido {
     private Timestamp fechaPedido;
 
     @Column(name = "estado")
-    @ApiModelProperty(value = "Estado actual del pedido", example = "Recibido", allowableValues = "Recibido,Procesando,Listo para despachar,Listo para pagar,Listo para envío,Enviado,Cancelado")
+    @ApiModelProperty(value = "Estado actual del pedido", example = "Recibido", allowableValues = "Recibido,Procesando,Listo para despachar,Listo para pagar,Enviado,Cancelado")
     private String estado = "Recibido"; // Usaremos el patrón State para controlar esto
 
     @ApiModelProperty(value = "Total del pedido", example = "299.99")

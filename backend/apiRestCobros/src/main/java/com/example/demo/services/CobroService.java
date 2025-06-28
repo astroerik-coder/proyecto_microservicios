@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.models.Cobro;
 import com.example.demo.repositories.CobroRepository;
+import com.example.demo.services.Publisher.PagoExitosoPublisher;
 import com.state.CobroContext;
 
 @Service
@@ -15,6 +16,8 @@ public class CobroService {
 
     @Autowired
     private CobroRepository cobroRepository;
+    @Autowired
+    private PagoExitosoPublisher pagoExitosoPublisher;
 
     // ✅ Listar cobros activos
     public List<Cobro> listarTodos() {
@@ -56,7 +59,13 @@ public class CobroService {
             Cobro cobro = optional.get();
             CobroContext context = new CobroContext(cobro);
             context.procesarPago(cobro);
-            return Optional.of(cobroRepository.save(cobro));
+            cobro = cobroRepository.save(cobro);
+
+            if (cobro.getEstadoPago().name().equals("PAGADO")) {
+                pagoExitosoPublisher.publicar(cobro.getIdPedido());
+            }
+
+            return Optional.of(cobro);
         }
         return Optional.empty();
     }

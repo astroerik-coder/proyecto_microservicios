@@ -11,21 +11,17 @@ import com.example.pedidos.config.RabbitMQConfig;
 import com.example.pedidos.models.DetallePedido;
 import com.example.pedidos.models.Pedido;
 import com.example.pedidos.models.dto.ProductoInfoEvent;
+import com.example.pedidos.models.dto.PedidoListoParaPagarEvent;
 import com.example.pedidos.repositories.DetallePedidoRepository;
 import com.example.pedidos.repositories.PedidoRepository;
 import com.example.pedidos.state.EstadoFactory;
 import com.example.pedidos.state.EstadoPedidoState;
 
 /**
- * Listener que se activa cuando llega un mensaje de tipo "producto.info" desde
- * el microservicio de inventario.
- * Este mensaje contiene información faltante de un producto en un pedido
- * (nombre y precio).
- * 
- * Objetivo:
- * - Completar el detalle del producto.
- * - Recalcular el total del pedido cuando todos los productos estén completos.
- * - Avanzar automáticamente el estado del pedido a "Listo para despachar".
+ * Listener que se activa cuando llega un mensaje de tipo "producto.info"
+ * desde el microservicio de inventario,
+ * o cuando se recibe un evento "pedido.listo_para_pagar" desde el micro de
+ * despachos.
  */
 @Service
 public class ProductoInfoListener {
@@ -44,28 +40,23 @@ public class ProductoInfoListener {
     public void handleProductoInfo(ProductoInfoEvent evento) {
         System.out.println("📥 producto.info recibido para producto " + evento.getIdProducto());
 
-        // Busca todos los detalles del pedido correspondiente
         List<DetallePedido> detalles = detalleRepo.findByPedidoIdAndEliminadoFalse(evento.getIdPedido());
 
-        // Encuentra el detalle específico que coincide con el producto informado
         Optional<DetallePedido> detalleOpt = detalles.stream()
                 .filter(d -> d.getIdProducto().equals(evento.getIdProducto()))
                 .findFirst();
 
-        // Si no lo encuentra, termina
         if (detalleOpt.isEmpty()) {
             System.out.println("⚠️ Detalle no encontrado.");
             return;
         }
 
-        // Completa la información del producto en el detalle
         DetallePedido detalle = detalleOpt.get();
         detalle.setNombreProducto(evento.getNombreProducto());
         detalle.setPrecioUnitario(evento.getPrecioUnitario());
         detalle.setSubtotal(detalle.getCantidad() * evento.getPrecioUnitario());
-        detalleRepo.save(detalle); // Guarda los cambios
+        detalleRepo.save(detalle);
 
-        // Verifica si todos los detalles ya tienen precio válido
         boolean incompleto = detalles.stream()
                 .anyMatch(d -> d.getPrecioUnitario() == null || d.getPrecioUnitario() == 0.0);
 
@@ -87,4 +78,6 @@ public class ProductoInfoListener {
             }
         }
     }
+
+      
 }
