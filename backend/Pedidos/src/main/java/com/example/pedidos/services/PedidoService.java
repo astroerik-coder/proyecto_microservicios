@@ -111,4 +111,9 @@ public class PedidoService {
                 })
                 .orElse(false);
     }
+
+    public List<Pedido> obtenerPedidosPorCliente(Long clienteId) {
+        return pedidoRepository.findByIdClienteAndEliminadoFalse(clienteId);
+    }
+
 }

@@ -47,6 +47,24 @@ public class PedidoController {
                 return pedidoService.listarPedidos();
         }
 
+        // ✅ Obtener pedidos por ID de cliente
+        @GetMapping("/cliente/{clienteId}")
+        @ApiOperation(value = "Obtener pedidos por cliente", notes = "Retorna todos los pedidos realizados por un cliente específico")
+        @ApiResponses(value = {
+                        @ApiResponse(code = 200, message = "Pedidos obtenidos exitosamente"),
+                        @ApiResponse(code = 404, message = "No se encontraron pedidos para este cliente")
+        })
+        public ResponseEntity<?> obtenerPedidosPorCliente(
+                        @ApiParam(value = "ID del cliente", required = true, example = "123") @PathVariable Long clienteId) {
+
+                List<Pedido> pedidos = pedidoService.obtenerPedidosPorCliente(clienteId);
+
+                return pedidos.isEmpty()
+                                ? ResponseEntity.status(404)
+                                                .body("No se encontraron pedidos para el cliente con ID " + clienteId)
+                                : ResponseEntity.ok(pedidos);
+        }
+
         // ✅ Obtener un pedido por ID
         @GetMapping("/{id}")
         @ApiOperation(value = "Obtener pedido por ID", notes = "Retorna un pedido específico basado en su ID")
