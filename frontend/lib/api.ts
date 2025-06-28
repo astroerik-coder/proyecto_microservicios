@@ -235,15 +235,33 @@ export const rabbitMQEvents = {
 
 //Inventario
 export const inventarioAPI = {
-  // Obtener inventario completo
-  getInventory: async () => {
+  // Insertar producto
+  insertInventory: async (inventaryData: any) => {
     const response = await fetch(`${API_INVENTORY}/productos`, {
-      method: "GET",
+      method: "POST",
       headers: getHeaders(),
+      body: JSON.stringify(inventaryData),
     });
     const data = await response.json();
-    console.log("Productos obtenidos:", data);
     return data;
+  },
+
+  // Obtener inventario paginado
+  getInventory: async (page: number = 0, size: number = 5) => {
+    const response = await fetch(
+      `${API_INVENTORY}/productos?page=${page}&size=${size}`,
+      {
+        method: "GET",
+        headers: getHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener productos: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data; // incluye { content, totalPages, number, size, totalElements, etc. }
   },
 
   //Obtener por id
@@ -253,19 +271,22 @@ export const inventarioAPI = {
       headers: getHeaders(),
     });
     const data = await response.json();
-    console.log("Producto obtenido:", data);
     return data;
   },
 
   //Actualizar por ID
-  updateInventoryByID: async (productId: string) => {
+  updateInventoryByID: async (productId: string, inventaryData: any) => {
     const response = await fetch(`${API_INVENTORY}/productos/${productId}`, {
       method: "PUT",
       headers: getHeaders(),
+      body: JSON.stringify(inventaryData),
     });
-    const data = await response.json();
-    console.log("Producto actualizado:", data);
-    return data;
+
+    if (!response.ok) {
+      const error = await response.text(); // o .json() si es JSON
+      throw new Error(`Error ${response.status}: ${error}`);
+    }
+    return response.json();
   },
 
   //Eliminado logico
@@ -275,7 +296,6 @@ export const inventarioAPI = {
       headers: getHeaders(),
     });
     const data = await response.json();
-    console.log("Producto eliminado:", data);
     return data;
   },
 };

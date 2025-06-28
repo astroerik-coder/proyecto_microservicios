@@ -42,24 +42,6 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
       status: "pending",
       createdAt: new Date().toISOString(),
     },
-    {
-      id: "ORD-002",
-      customerId: "2",
-      customerName: "Carlos Rodríguez",
-      items: [{ id: "3", name: "Azúcar Blanca", sku: "AZU-001", price: 3200, quantity: 1 }],
-      total: 3200,
-      status: "processing",
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: "ORD-003",
-      customerId: "2",
-      customerName: "Ana Martínez",
-      items: [{ id: "4", name: "Frijoles Negros", sku: "FRI-001", price: 2800, quantity: 3 }],
-      total: 8400,
-      status: "ready_to_ship",
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
-    },
   ])
 
   const createOrder = (orderData: Omit<Order, "id" | "createdAt">) => {

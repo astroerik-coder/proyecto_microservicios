@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { TabsContent } from "../ui/tabs";
 import {
@@ -19,18 +21,12 @@ import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { inventarioAPI } from "@/lib/api";
-import { useInventarioSocket } from "@/hooks/useInventarioSocket";
+import { useInventarioSocket } from "@/hooks/use-inventario-socket";
+import ModalAgregarProducto from "@/components/inventario/inventario-add-form";
+import { toast } from "@/hooks/use-toast";
+import { Product } from "@/types/product";
 
 const PAGE_SIZE = 5;
-
-type InventarioItem = {
-  id: number;
-  nombre: string;
-  descripcion: string;
-  stock: number;
-  precio: number;
-  eliminado?: boolean;
-};
 
 type PaginationProps = {
   page: number;
@@ -65,35 +61,45 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
 }
 
 export function InventarioTab() {
-  const [inventory, setInventory] = useState<InventarioItem[]>([]);
-  const [filtered, setFiltered] = useState<InventarioItem[]>([]);
+  const [inventory, setInventory] = useState<Product[]>([]);
+  const [filtered, setFiltered] = useState<Product[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [showForm, setShowForm] = useState(false);
+  const [productoEditando, setProductoEditando] = useState<Product | null>(
+    null
+  );
 
-  const fetchData = async () => {
-    const productos = await inventarioAPI.getInventory();
-    const activos = productos.filter((p: InventarioItem) => !p.eliminado);
-    setInventory(activos);
-    setFiltered(activos);
+  const fetchData = async (pagina: number = page - 1) => {
+    try {
+      const res = await inventarioAPI.getInventory(pagina, PAGE_SIZE);
+      const productosActivos = res.content.filter((p: Product) => !p.eliminado);
+
+      setInventory(productosActivos);
+      setFiltered(productosActivos);
+      setTotalPages(res.totalPages);
+      setPage(res.number + 1);
+    } catch (error) {
+      console.error("❌ Error al obtener inventario:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo cargar el inventario",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData(0);
+  }, []);
 
-  useInventarioSocket((nuevoProducto: InventarioItem) => {
-    if (!nuevoProducto?.id) return;
-
-    setInventory((prev) => {
-      const yaExiste = prev.some((p) => p.id === nuevoProducto.id);
-      if (yaExiste) {
-        // Si ya existe, actualizar su información
-        return prev.map((p) => (p.id === nuevoProducto.id ? nuevoProducto : p));
-      } else {
-        // Si es nuevo, agregarlo al final
-        return [...prev, nuevoProducto];
-      }
+  useInventarioSocket(() => {
+    toast({
+      title: "Inventario actualizado",
+      description: "Un producto ha sido modificado.",
     });
+    fetchData(page - 1);
   });
 
   useEffect(() => {
@@ -103,11 +109,22 @@ export function InventarioTab() {
     setFiltered(resultados);
   }, [search, inventory]);
 
-  const paginatedItems = filtered.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE
-  );
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const handleDelete = async (id: number) => {
+    try {
+      await inventarioAPI.deleteInventoryByID(id.toString());
+      toast({
+        title: "Éxito",
+        description: "Producto eliminado correctamente",
+      });
+      fetchData(page - 1);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar el producto",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <TabsContent value="inventory">
@@ -122,23 +139,26 @@ export function InventarioTab() {
               placeholder="Buscar producto..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              className="max-w-xs"
             />
-            <Button onClick={() => alert("Agregar producto")}>+ Agregar</Button>
+            <Button onClick={() => setShowForm(true)}>+ Agregar</Button>
           </div>
         </CardHeader>
+
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Producto</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Stock Actual</TableHead>
+                <TableHead>ID</TableHead>
+                <TableHead>Stock</TableHead>
                 <TableHead>Precio</TableHead>
                 <TableHead>Estado</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedItems.map((item) => (
+              {filtered.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.nombre}</TableCell>
                   <TableCell>{item.id}</TableCell>
@@ -157,21 +177,56 @@ export function InventarioTab() {
                       {item.stock > 0 ? "Disponible" : "Agotado"}
                     </Badge>
                   </TableCell>
+                  <TableCell className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setProductoEditando(item);
+                        setShowForm(true);
+                      }}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() =>
+                        item.id !== undefined && handleDelete(item.id)
+                      }
+                    >
+                      Eliminar
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
           {totalPages > 1 && (
             <div className="flex justify-end mt-4">
               <Pagination
                 page={page}
                 totalPages={totalPages}
-                onPageChange={setPage}
+                onPageChange={(newPage) => {
+                  setPage(newPage);
+                  fetchData(newPage - 1);
+                }}
               />
             </div>
           )}
         </CardContent>
       </Card>
+
+      <ModalAgregarProducto
+        open={showForm}
+        onOpenChange={(open) => {
+          setShowForm(open);
+          if (!open) setProductoEditando(null);
+        }}
+        onSuccess={() => fetchData(page - 1)}
+        producto={productoEditando}
+      />
     </TabsContent>
   );
 }
