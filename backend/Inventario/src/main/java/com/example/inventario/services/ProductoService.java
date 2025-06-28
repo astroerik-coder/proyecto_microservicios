@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.example.inventario.models.Producto;
 import com.example.inventario.repositories.ProductoRepository;
 import com.example.inventario.services.Publisher.ProductoActualizadoPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class ProductoService {
@@ -22,6 +24,11 @@ public class ProductoService {
     // Listar todos los productos no eliminados
     public List<Producto> listarProductos() {
         return productoRepository.findByEliminadoFalse();
+    }
+
+    // Listar productos paginado
+    public Page<Producto> listarProductosPaginado(Pageable pageable) {
+        return productoRepository.findByEliminadoFalse(pageable);
     }
 
     // Buscar producto por ID
@@ -79,6 +86,7 @@ public class ProductoService {
                     if (producto.getStock() >= cantidad) {
                         producto.setStock(producto.getStock() - cantidad);
                         productoRepository.save(producto);
+                        productoActualizadoPublisher.publicarProductoActualizado(producto);
                         return true;
                     }
                     return false;
@@ -91,6 +99,7 @@ public class ProductoService {
             Producto producto = optional.get();
             producto.setStock(producto.getStock() + cantidad);
             productoRepository.save(producto);
+            productoActualizadoPublisher.publicarProductoActualizado(producto);
             return true;
         }
         return false;

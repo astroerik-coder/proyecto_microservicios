@@ -16,12 +16,12 @@ public class RabbitMQConfig {
 
     @Bean
     public TopicExchange exchange() {
-        return new TopicExchange(EXCHANGE);
+        return new TopicExchange(EXCHANGE, true, false); // durable
     }
 
     @Bean
     public Queue inventarioActualizadoQueue() {
-        return new Queue(QUEUE, false); // false = no durable
+        return new Queue(QUEUE, true); // durable = true
     }
 
     @Bean
@@ -40,8 +40,7 @@ public class RabbitMQConfig {
     @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
             ConnectionFactory connectionFactory,
-            Jackson2JsonMessageConverter messageConverter
-    ) {
+            Jackson2JsonMessageConverter messageConverter) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(messageConverter);
