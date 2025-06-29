@@ -19,6 +19,7 @@ import {
   Minus,
   CreditCard,
   History,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useOrders } from "@/hooks/use-orders";
@@ -27,11 +28,14 @@ import PaymentModal from "@/components/payment-modal";
 import AlertModal from "@/components/alert-modal";
 import { useInventory } from "@/hooks/use-inventory";
 import { InventarioClient } from "./inventario/inventario-client";
-import { Product } from "@/types/product";
+import { Product, PedidoRequest } from "@/types/product";
+import Link from "next/link";
+import PedidosTable from "@/components/pedidos/pedidos-table";
+import { useRealtimeUpdates } from "@/hooks/use-realtime-updates";
 
 export default function ClientDashboard() {
   const { user, logout } = useAuth();
-  const { orders } = useOrders();
+  const { pedidos, loading, createPedido, deletePedido } = useOrders();
   const { inventory } = useInventory();
   const { cart, addToCart, removeFromCart, clearCart, getCartTotal } =
     useCart();
@@ -44,6 +48,7 @@ export default function ClientDashboard() {
   });
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const { registerUpdateCallback, updateSpecificPedido } = useRealtimeUpdates();
 
   const defaultImage = useMemo(
     () =>
@@ -69,8 +74,6 @@ export default function ClientDashboard() {
   );
 
   const totalPages = Math.ceil(adaptedInventory.length / pageSize);
-
-  const userOrders = orders.filter((order) => order.customerId === user?.id);
 
   const handleAddToCart = (product: Product) => {
     if (product.stock > 0) {
@@ -105,33 +108,115 @@ export default function ClientDashboard() {
     setShowPayment(true);
   };
 
-  type OrderStatus =
-    | "pending"
-    | "processing"
-    | "ready_to_ship"
-    | "shipped"
-    | "completed"
-    | "cancelled";
+  const handlePaymentSuccess = async () => {
+    try {
+      // Crear el pedido con los datos del carrito
+      const pedidoData: PedidoRequest = {
+        idCliente: user?.id || 0,
+        total: getCartTotal(),
+        lineas: cart.map((item) => ({
+          idProducto: parseInt(item.id),
+          cantidad: item.quantity,
+          precioUnitario: item.price,
+        })),
+      };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<
-      OrderStatus,
-      {
-        label: string;
-        variant: "secondary" | "default" | "outline" | "destructive";
-      }
-    > = {
-      pending: { label: "Pendiente", variant: "secondary" },
-      processing: { label: "Procesando", variant: "default" },
-      ready_to_ship: { label: "Listo para Envío", variant: "outline" },
-      shipped: { label: "Enviado", variant: "default" },
-      completed: { label: "Completado", variant: "default" },
-      cancelled: { label: "Cancelado", variant: "destructive" },
+      await createPedido(pedidoData);
+      
+      // Limpiar carrito después de crear el pedido
+      clearCart();
+      
+      setAlert({
+        show: true,
+        type: "success",
+        title: "Pedido Enviado",
+        message: "Tu pedido ha sido enviado y está pendiente de aprobación por el administrador.",
+      });
+      
+      setShowPayment(false);
+    } catch (error) {
+      setAlert({
+        show: true,
+        type: "error",
+        title: "Error",
+        message: "No se pudo enviar el pedido. Inténtalo de nuevo.",
+      });
+    }
+  };
+
+  const handleDeletePedido = async (pedidoId: number) => {
+    try {
+      await deletePedido(pedidoId);
+      setAlert({
+        show: true,
+        type: "success",
+        title: "Pedido Eliminado",
+        message: "El pedido ha sido eliminado exitosamente.",
+      });
+    } catch (error) {
+      setAlert({
+        show: true,
+        type: "error",
+        title: "Error",
+        message: "No se pudo eliminar el pedido.",
+      });
+    }
+  };
+
+  const getStatusBadge = (estado: string) => {
+    const statusConfig: Record<string, {
+      label: string;
+      variant: "secondary" | "default" | "outline" | "destructive";
+    }> = {
+      "Recibido": { label: "Recibido", variant: "secondary" },
+      "Procesando": { label: "Procesando", variant: "default" },
+      "Listo para despachar": { label: "Listo para despachar", variant: "outline" },
+      "Listo para pagar": { label: "Listo para pagar", variant: "outline" },
+      "Enviado": { label: "Enviado", variant: "default" },
+      "Cancelado": { label: "Cancelado", variant: "destructive" },
     };
 
-    const config = statusConfig[status as OrderStatus] ?? statusConfig.pending;
+    const config = statusConfig[estado] ?? statusConfig["Recibido"];
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Calcular estadísticas del cliente
+  const clientStats = useMemo(() => {
+    // Validar que pedidos sea un array
+    if (!Array.isArray(pedidos)) {
+      return {
+        total: 0,
+        pendientes: 0,
+        procesando: 0,
+        listos: 0,
+        enviados: 0,
+      };
+    }
+
+    const totalPedidos = pedidos.length;
+    const pedidosPendientes = pedidos.filter(p => p.estado === "PENDIENTE_APROBACION").length;
+    const pedidosProcesando = pedidos.filter(p => p.estado === "Procesando").length;
+    const pedidosListos = pedidos.filter(p => p.estado === "Listo para pagar").length;
+    const pedidosEnviados = pedidos.filter(p => p.estado === "Enviado").length;
+
+    return {
+      total: totalPedidos,
+      pendientes: pedidosPendientes,
+      procesando: pedidosProcesando,
+      listos: pedidosListos,
+      enviados: pedidosEnviados,
+    };
+  }, [pedidos]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -157,6 +242,12 @@ export default function ClientDashboard() {
                   Carrito ({cart.length})
                 </Button>
               </div>
+              <Link href="/tracking">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Seguimiento
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 onClick={logout}
@@ -175,18 +266,20 @@ export default function ClientDashboard() {
           <TabsList>
             <TabsTrigger value="products">Productos</TabsTrigger>
             <TabsTrigger value="cart">Carrito ({cart.length})</TabsTrigger>
-            <TabsTrigger value="orders">Mis Pedidos</TabsTrigger>
+            <TabsTrigger value="orders">Mis Pedidos ({pedidos.length})</TabsTrigger>
           </TabsList>
 
           {/* Componente de Inventario */}
-          <InventarioClient
-            paginatedInventory={paginatedInventory}
-            totalPages={totalPages}
-            page={page}
-            setPage={setPage}
-            handleAddToCart={handleAddToCart}
-            defaultImage={defaultImage}
-          />
+          <TabsContent value="products">
+            <InventarioClient
+              paginatedInventory={paginatedInventory}
+              totalPages={totalPages}
+              page={page}
+              setPage={setPage}
+              handleAddToCart={handleAddToCart}
+              defaultImage={defaultImage}
+            />
+          </TabsContent>
 
           <TabsContent value="cart">
             <Card>
@@ -266,7 +359,7 @@ export default function ClientDashboard() {
                           className="flex-1 bg-green-600 hover:bg-green-700"
                         >
                           <CreditCard className="w-4 h-4 mr-2" />
-                          Proceder al Pago
+                          Enviar Pedido para Aprobación
                         </Button>
                       </div>
                     </div>
@@ -281,43 +374,70 @@ export default function ClientDashboard() {
               <CardHeader>
                 <CardTitle>Mis Pedidos</CardTitle>
                 <CardDescription>
-                  Historial de tus pedidos realizados
+                  Historial de todos tus pedidos
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {userOrders.length === 0 ? (
+                {/* Estadísticas del cliente */}
+                {clientStats.total > 0 && (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-500">Total Pedidos</p>
+                      <p className="text-xl font-bold">{clientStats.total}</p>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-200">
+                      <p className="text-sm text-orange-600">Pendientes de Aprobación</p>
+                      <p className="text-xl font-bold text-orange-700">{clientStats.pendientes}</p>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-600">En Procesamiento</p>
+                      <p className="text-xl font-bold text-blue-700">{clientStats.procesando}</p>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
+                      <p className="text-sm text-green-600">Listos para Pagar</p>
+                      <p className="text-xl font-bold text-green-700">{clientStats.listos}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Alerta de pedidos pendientes */}
+                {clientStats.pendientes > 0 && (
+                  <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-5 w-5 text-orange-600" />
+                      <div>
+                        <h3 className="font-semibold text-orange-800">
+                          {clientStats.pendientes} pedido{clientStats.pendientes > 1 ? 's' : ''} pendiente{clientStats.pendientes > 1 ? 's' : ''} de aprobación
+                        </h3>
+                        <p className="text-sm text-orange-700">
+                          Tu pedido está siendo revisado por el administrador. Te notificaremos cuando sea aprobado.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-gray-500 mt-2">Cargando pedidos...</p>
+                  </div>
+                ) : pedidos.length === 0 ? (
                   <div className="text-center py-8">
                     <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">
-                      No tienes pedidos realizados
-                    </p>
+                    <p className="text-gray-500">No tienes pedidos aún</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {userOrders.map((order) => (
-                      <div key={order.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-semibold">
-                              Pedido #{order.id}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          {getStatusBadge(order.status)}
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">
-                            {order.items.length} producto(s)
-                          </span>
-                          <span className="font-bold text-green-600">
-                            ${order.total.toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <PedidosTable
+                    pedidos={pedidos}
+                    onViewOrder={() => {}}
+                    onCreateDespacho={() => {}}
+                    onAvanzarDespacho={async () => {}}
+                    onCreateCobro={() => {}}
+                    onProcesarCobro={async () => {}}
+                    onDeletePedido={deletePedido}
+                    isAdmin={false}
+                  />
                 )}
               </CardContent>
             </Card>
@@ -325,21 +445,12 @@ export default function ClientDashboard() {
         </Tabs>
       </div>
 
-      {/* Modals */}
+      {/* Modales */}
       {showPayment && (
         <PaymentModal
           total={getCartTotal()}
           onClose={() => setShowPayment(false)}
-          onSuccess={() => {
-            setShowPayment(false);
-            clearCart();
-            setAlert({
-              show: true,
-              type: "success",
-              title: "Pago Exitoso",
-              message: "Tu pedido ha sido procesado correctamente.",
-            });
-          }}
+          onSuccess={handlePaymentSuccess}
         />
       )}
 
@@ -348,9 +459,7 @@ export default function ClientDashboard() {
         type={alert.type}
         title={alert.title}
         message={alert.message}
-        onClose={() =>
-          setAlert({ show: false, type: "", title: "", message: "" })
-        }
+        onClose={() => setAlert({ ...alert, show: false })}
       />
     </div>
   );

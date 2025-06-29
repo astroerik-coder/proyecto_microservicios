@@ -53,14 +53,14 @@ export default function PaymentModal({ total, onClose, onSuccess }: PaymentModal
             {result === "success" ? (
               <>
                 <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-green-600 mb-2">¡Pago Exitoso!</h3>
-                <p className="text-gray-600">Tu pedido ha sido procesado correctamente</p>
+                <h3 className="text-xl font-bold text-green-600 mb-2">¡Pedido Enviado!</h3>
+                <p className="text-gray-600">Tu pedido ha sido enviado y está pendiente de aprobación</p>
               </>
             ) : (
               <>
                 <XCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-red-600 mb-2">Pago Rechazado</h3>
-                <p className="text-gray-600">Hubo un problema con el procesamiento del pago</p>
+                <h3 className="text-xl font-bold text-red-600 mb-2">Error al Enviar</h3>
+                <p className="text-gray-600">Hubo un problema al enviar el pedido</p>
                 <Button className="mt-4" onClick={() => setResult(null)}>
                   Intentar Nuevamente
                 </Button>
@@ -78,7 +78,7 @@ export default function PaymentModal({ total, onClose, onSuccess }: PaymentModal
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CreditCard className="w-5 h-5" />
-            Procesar Pago
+            Enviar Pedido para Aprobación
           </DialogTitle>
         </DialogHeader>
 
@@ -86,7 +86,7 @@ export default function PaymentModal({ total, onClose, onSuccess }: PaymentModal
           <CardHeader>
             <CardTitle className="text-lg">Resumen del Pedido</CardTitle>
             <CardDescription>
-              Total a pagar: <span className="text-2xl font-bold text-green-600">${total.toLocaleString()}</span>
+              Total del pedido: <span className="text-2xl font-bold text-green-600">${total.toLocaleString()}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -158,7 +158,7 @@ export default function PaymentModal({ total, onClose, onSuccess }: PaymentModal
                 Cancelar
               </Button>
               <Button onClick={handlePayment} disabled={processing} className="flex-1 bg-green-600 hover:bg-green-700">
-                {processing ? "Procesando..." : `Pagar $${total.toLocaleString()}`}
+                {processing ? "Enviando..." : `Enviar Pedido`}
               </Button>
             </div>
           </CardContent>
