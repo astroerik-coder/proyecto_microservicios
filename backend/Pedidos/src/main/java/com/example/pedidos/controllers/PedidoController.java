@@ -53,7 +53,7 @@ public class PedidoController {
         })
         public ResponseEntity<Page<Pedido>> listarPedidos(
                         @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "2") int size) {
+                        @RequestParam(defaultValue = "5") int size) {
                 Pageable pageable = PageRequest.of(page, size);
                 return ResponseEntity.ok(pedidoService.listarPedidosPaginados(pageable));
         }
