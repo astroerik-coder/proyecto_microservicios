@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pedidos.models.DetallePedido;
@@ -25,6 +28,11 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -43,8 +51,11 @@ public class PedidoController {
                         @ApiResponse(code = 200, message = "Lista de pedidos obtenida exitosamente"),
                         @ApiResponse(code = 500, message = "Error interno del servidor")
         })
-        public List<Pedido> listarPedidos() {
-                return pedidoService.listarPedidos();
+        public ResponseEntity<Page<Pedido>> listarPedidos(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "2") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(pedidoService.listarPedidosPaginados(pageable));
         }
 
         // ✅ Obtener pedidos por ID de cliente
@@ -54,15 +65,12 @@ public class PedidoController {
                         @ApiResponse(code = 200, message = "Pedidos obtenidos exitosamente"),
                         @ApiResponse(code = 404, message = "No se encontraron pedidos para este cliente")
         })
-        public ResponseEntity<?> obtenerPedidosPorCliente(
-                        @ApiParam(value = "ID del cliente", required = true, example = "123") @PathVariable Long clienteId) {
-
-                List<Pedido> pedidos = pedidoService.obtenerPedidosPorCliente(clienteId);
-
-                return pedidos.isEmpty()
-                                ? ResponseEntity.status(404)
-                                                .body("No se encontraron pedidos para el cliente con ID " + clienteId)
-                                : ResponseEntity.ok(pedidos);
+        public ResponseEntity<Page<Pedido>> obtenerPedidosPorCliente(
+                        @PathVariable Long clienteId,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "5") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(pedidoService.obtenerPedidosPorClientePaginados(clienteId, pageable));
         }
 
         // ✅ Obtener un pedido por ID
