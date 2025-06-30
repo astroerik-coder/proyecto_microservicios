@@ -1,0 +1,17 @@
+services:
+  db:
+    image: mysql:8.0                  # Imagen oficial MySQL 8.0
+    container_name: mysql-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"  # Root sin contraseña
+      MYSQL_ROOT_HOST: "%"               # Permitir conexiones remotas
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql           # Datos persistentes
+      - ./mysql/conf.d:/etc/mysql/conf.d:ro # Config personalizada (sólo lectura)
+      - ./mysql/initdb:/docker-entrypoint-initdb.d # Scripts de init
+
+volumes:
+  mysql-data:
