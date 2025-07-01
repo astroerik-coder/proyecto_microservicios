@@ -381,6 +381,18 @@ export default function PedidosTable({
                       </Button>
                     </>
                   )}
+                  {/* Botón de pago para el cliente */}
+                  {!isAdmin && pedido.estado === "Listo para pagar" && !pedido.cobro && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onCreateCobro(pedido)}
+                      className="bg-green-600 text-white hover:bg-green-700"
+                    >
+                      <CreditCard className="w-3 h-3 mr-1" />
+                      Pagar
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>
