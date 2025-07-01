@@ -1,13 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Package, Truck, CreditCard, RefreshCw, Edit } from "lucide-react"
+import { Package, Truck, CreditCard, RefreshCw, Edit, BarChart3, Users, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
+import { Breadcrumb } from "@/components/breadcrumb"
 import Link from "next/link"
 
 // Estados disponibles para cada microservicio
@@ -127,227 +129,209 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Panel de Administración</h1>
-          <div className="flex space-x-4">
-            <Button variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Actualizar
-            </Button>
-            <Link href="/">
-              <Button variant="outline">Volver a Tienda</Button>
-            </Link>
-          </div>
-        </div>
+    <div className="p-6 space-y-6">
+      {/* Breadcrumb */}
+      <Breadcrumb />
+      
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-light text-gray-900">Panel de Administración</h1>
+        <p className="text-gray-600">Gestión de pedidos y seguimiento de operaciones</p>
+      </div>
 
-        {/* Estadísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Pedidos</p>
-                  <p className="text-3xl font-bold">{estadisticas.totalPedidos}</p>
-                </div>
-                <Package className="h-8 w-8 text-blue-600" />
+      {/* Estadísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-gray-100 bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Pedidos</p>
+                <p className="text-3xl font-light text-gray-900">{estadisticas.totalPedidos}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Pendientes</p>
-                  <p className="text-3xl font-bold text-yellow-600">{estadisticas.pedidosPendientes}</p>
-                </div>
-                <Package className="h-8 w-8 text-yellow-600" />
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <Package className="h-6 w-6 text-blue-600" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Ventas Hoy</p>
-                  <p className="text-3xl font-bold text-green-600">${estadisticas.ventasHoy.toLocaleString()}</p>
-                </div>
-                <CreditCard className="h-8 w-8 text-green-600" />
+        <Card className="border-gray-100 bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pendientes</p>
+                <p className="text-3xl font-light text-yellow-600">{estadisticas.pedidosPendientes}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Entregados</p>
-                  <p className="text-3xl font-bold text-purple-600">{estadisticas.productosEnviados}</p>
-                </div>
-                <Truck className="h-8 w-8 text-purple-600" />
+              <div className="p-3 bg-yellow-50 rounded-lg">
+                <Package className="h-6 w-6 text-yellow-600" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Tabla de pedidos */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Gestión de Pedidos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Pedido</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Despacho</TableHead>
-                  <TableHead>Cobro</TableHead>
-                  <TableHead>Envío</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {pedidos.map((pedido) => (
-                  <TableRow key={pedido.id}>
-                    <TableCell className="font-medium">#{pedido.id}</TableCell>
-                    <TableCell>{formatearFecha(pedido.fecha)}</TableCell>
-                    <TableCell>{pedido.cliente}</TableCell>
-                    <TableCell className="font-semibold text-green-600">${pedido.total.toLocaleString()}</TableCell>
-                    <TableCell>
-                      <Select
-                        value={pedido.estadoDespacho}
-                        onValueChange={(valor) => actualizarEstado(pedido.id, "despacho", valor)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {estadosDespacho.map((estado) => (
-                            <SelectItem key={estado} value={estado}>
-                              <Badge className={`${estadoColors[estado]} text-xs`}>{estado}</Badge>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={pedido.estadoCobro}
-                        onValueChange={(valor) => actualizarEstado(pedido.id, "cobro", valor)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {estadosCobro.map((estado) => (
-                            <SelectItem key={estado} value={estado}>
-                              <Badge className={`${estadoColors[estado]} text-xs`}>{estado}</Badge>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={pedido.estadoEnvio}
-                        onValueChange={(valor) => actualizarEstado(pedido.id, "envio", valor)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {estadosEnvio.map((estado) => (
-                            <SelectItem key={estado} value={estado}>
-                              <Badge className={`${estadoColors[estado]} text-xs`}>{estado}</Badge>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Gestionar Pedido #{pedido.id}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <label className="text-sm font-medium">Estado de Despacho</label>
-                              <Select
-                                value={pedido.estadoDespacho}
-                                onValueChange={(valor) => actualizarEstado(pedido.id, "despacho", valor)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {estadosDespacho.map((estado) => (
-                                    <SelectItem key={estado} value={estado}>
-                                      {estado}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium">Estado de Cobro</label>
-                              <Select
-                                value={pedido.estadoCobro}
-                                onValueChange={(valor) => actualizarEstado(pedido.id, "cobro", valor)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {estadosCobro.map((estado) => (
-                                    <SelectItem key={estado} value={estado}>
-                                      {estado}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium">Estado de Envío</label>
-                              <Select
-                                value={pedido.estadoEnvio}
-                                onValueChange={(valor) => actualizarEstado(pedido.id, "envio", valor)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {estadosEnvio.map((estado) => (
-                                    <SelectItem key={estado} value={estado}>
-                                      {estado}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        <Card className="border-gray-100 bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Ventas Hoy</p>
+                <p className="text-3xl font-light text-green-600">${estadisticas.ventasHoy.toLocaleString()}</p>
+              </div>
+              <div className="p-3 bg-green-50 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-100 bg-white">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Entregados</p>
+                <p className="text-3xl font-light text-purple-600">{estadisticas.productosEnviados}</p>
+              </div>
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <Truck className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Tabla de pedidos */}
+      <Card className="border-gray-100 bg-white">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-medium">Gestión de Pedidos</CardTitle>
+            <Button variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Actualizar
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-medium text-gray-700">Pedido</TableHead>
+                <TableHead className="font-medium text-gray-700">Cliente</TableHead>
+                <TableHead className="font-medium text-gray-700">Fecha</TableHead>
+                <TableHead className="font-medium text-gray-700">Total</TableHead>
+                <TableHead className="font-medium text-gray-700">Despacho</TableHead>
+                <TableHead className="font-medium text-gray-700">Cobro</TableHead>
+                <TableHead className="font-medium text-gray-700">Envío</TableHead>
+                <TableHead className="font-medium text-gray-700">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pedidos.map((pedido) => (
+                <TableRow key={pedido.id}>
+                  <TableCell className="font-medium">#{pedido.id}</TableCell>
+                  <TableCell>{pedido.cliente}</TableCell>
+                  <TableCell className="text-sm text-gray-600">{formatearFecha(pedido.fecha)}</TableCell>
+                  <TableCell className="font-medium">${pedido.total.toLocaleString()}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={pedido.estadoDespacho}
+                      onValueChange={(value) => actualizarEstado(pedido.id, "despacho", value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {estadosDespacho.map((estado) => (
+                          <SelectItem key={estado} value={estado}>
+                            {estado}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={pedido.estadoCobro}
+                      onValueChange={(value) => actualizarEstado(pedido.id, "cobro", value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {estadosCobro.map((estado) => (
+                          <SelectItem key={estado} value={estado}>
+                            {estado}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={pedido.estadoEnvio}
+                      onValueChange={(value) => actualizarEstado(pedido.id, "envio", value)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {estadosEnvio.map((estado) => (
+                          <SelectItem key={estado} value={estado}>
+                            {estado}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Editar Pedido #{pedido.id}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-2">Información del Cliente</h3>
+                            <p className="text-sm text-gray-600">{pedido.cliente}</p>
+                          </div>
+                          <Separator />
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-2">Estados Actuales</h3>
+                            <div className="grid grid-cols-3 gap-4">
+                              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                <p className="text-xs font-medium text-gray-600">Despacho</p>
+                                <Badge className={`${estadoColors[pedido.estadoDespacho]} text-xs mt-1`}>
+                                  {pedido.estadoDespacho}
+                                </Badge>
+                              </div>
+                              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                <p className="text-xs font-medium text-gray-600">Cobro</p>
+                                <Badge className={`${estadoColors[pedido.estadoCobro]} text-xs mt-1`}>
+                                  {pedido.estadoCobro}
+                                </Badge>
+                              </div>
+                              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                                <p className="text-xs font-medium text-gray-600">Envío</p>
+                                <Badge className={`${estadoColors[pedido.estadoEnvio]} text-xs mt-1`}>
+                                  {pedido.estadoEnvio}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   )
 }

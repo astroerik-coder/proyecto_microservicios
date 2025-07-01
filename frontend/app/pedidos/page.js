@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Package, Clock, Truck, CheckCircle, XCircle, Eye } from "lucide-react"
+import { Package, Clock, Truck, CheckCircle, XCircle, Eye, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
 import Link from "next/link"
+import { Breadcrumb } from "@/components/breadcrumb"
 
 // Simulación de pedidos
 const pedidosSimulados = [
@@ -113,160 +115,139 @@ export default function PedidosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Mis Pedidos</h1>
-          <Link href="/">
-            <Button variant="outline">Volver a Productos</Button>
-          </Link>
-        </div>
+    <div className="p-6 space-y-6">
+      {/* Breadcrumb */}
+      <Breadcrumb />
+      
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-light text-gray-900">Mis Pedidos</h1>
+        <p className="text-gray-600">Seguimiento de tus pedidos y entregas</p>
+      </div>
 
-        {pedidos.length === 0 ? (
-          <Card>
-            <CardContent className="text-center p-8">
-              <Package className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-              <h2 className="text-xl font-semibold mb-2">No tienes pedidos</h2>
-              <p className="text-gray-600 mb-4">Realiza tu primer pedido para verlo aquí</p>
-              <Link href="/">
-                <Button>Explorar Productos</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-6">
-            {pedidos.map((pedido) => (
-              <Card key={pedido.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="flex items-center space-x-2">
-                        <span>Pedido #{pedido.id}</span>
-                        <Badge className={estadoColors[pedido.estado]}>
-                          {getEstadoIcon(pedido.estado)}
-                          <span className="ml-1">{pedido.estado.replace("_", " ")}</span>
-                        </Badge>
-                      </CardTitle>
-                      <p className="text-gray-600">{formatearFecha(pedido.fecha)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-green-600">${pedido.total.toLocaleString()}</p>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver Detalles
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Detalles del Pedido #{pedido.id}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-6">
-                            {/* Estados del pedido */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              <div className="text-center">
-                                <div className="mb-2">
-                                  <Package className="h-8 w-8 mx-auto text-blue-600" />
-                                </div>
-                                <p className="text-sm font-medium">Despacho</p>
-                                <Badge className={`${estadoColors[pedido.estadoDespacho]} text-xs`}>
-                                  {pedido.estadoDespacho}
-                                </Badge>
+      {pedidos.length === 0 ? (
+        <Card className="border-gray-100 bg-white">
+          <CardContent className="text-center p-12">
+            <div className="text-gray-400 mb-4">
+              <FileText className="h-16 w-16 mx-auto" />
+            </div>
+            <h2 className="text-xl font-medium text-gray-900 mb-2">No tienes pedidos</h2>
+            <p className="text-gray-600 mb-6">Realiza tu primer pedido para verlo aquí</p>
+            <Link href="/">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                Explorar Productos
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {pedidos.map((pedido) => (
+            <Card key={pedido.id} className="border-gray-100 bg-white hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div className="space-y-2">
+                    <CardTitle className="flex items-center space-x-3">
+                      <span className="text-lg font-medium">Pedido #{pedido.id}</span>
+                      <Badge className={estadoColors[pedido.estado]}>
+                        {getEstadoIcon(pedido.estado)}
+                        <span className="ml-1">{pedido.estado.replace("_", " ")}</span>
+                      </Badge>
+                    </CardTitle>
+                    <p className="text-sm text-gray-600">{formatearFecha(pedido.fecha)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-light text-gray-900">${pedido.total.toLocaleString()}</p>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="mt-2">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver Detalles
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle className="text-xl font-medium">Detalles del Pedido #{pedido.id}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-6">
+                          {/* Estados del pedido */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center p-4 bg-gray-50 rounded-lg">
+                              <div className="mb-2">
+                                <Package className="h-8 w-8 mx-auto text-blue-600" />
                               </div>
-                              <div className="text-center">
-                                <div className="mb-2">
-                                  <CheckCircle className="h-8 w-8 mx-auto text-green-600" />
-                                </div>
-                                <p className="text-sm font-medium">Cobro</p>
-                                <Badge className={`${estadoColors[pedido.estadoCobro]} text-xs`}>
-                                  {pedido.estadoCobro}
-                                </Badge>
-                              </div>
-                              <div className="text-center">
-                                <div className="mb-2">
-                                  <Truck className="h-8 w-8 mx-auto text-purple-600" />
-                                </div>
-                                <p className="text-sm font-medium">Envío</p>
-                                <Badge className={`${estadoColors[pedido.estadoEnvio]} text-xs`}>
-                                  {pedido.estadoEnvio}
-                                </Badge>
-                              </div>
+                              <p className="text-sm font-medium text-gray-700">Despacho</p>
+                              <Badge className={`${estadoColors[pedido.estadoDespacho]} text-xs mt-1`}>
+                                {pedido.estadoDespacho}
+                              </Badge>
                             </div>
-
-                            {/* Información del cliente */}
-                            <div>
-                              <h3 className="font-semibold mb-2">Información de Entrega</h3>
-                              <div className="bg-gray-50 p-4 rounded-lg">
-                                <p>
-                                  <strong>Cliente:</strong> {pedido.cliente.nombre}
-                                </p>
-                                <p>
-                                  <strong>Teléfono:</strong> {pedido.cliente.telefono}
-                                </p>
-                                <p>
-                                  <strong>Dirección:</strong> {pedido.cliente.direccion}
-                                </p>
+                            <div className="text-center p-4 bg-gray-50 rounded-lg">
+                              <div className="mb-2">
+                                <CheckCircle className="h-8 w-8 mx-auto text-green-600" />
                               </div>
+                              <p className="text-sm font-medium text-gray-700">Cobro</p>
+                              <Badge className={`${estadoColors[pedido.estadoCobro]} text-xs mt-1`}>
+                                {pedido.estadoCobro}
+                              </Badge>
                             </div>
-
-                            {/* Productos */}
-                            <div>
-                              <h3 className="font-semibold mb-2">Productos</h3>
-                              <div className="space-y-2">
-                                {pedido.productos.map((producto) => (
-                                  <div
-                                    key={producto.id}
-                                    className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
-                                  >
-                                    <div>
-                                      <p className="font-medium">{producto.nombre}</p>
-                                      <p className="text-sm text-gray-600">Cantidad: {producto.cantidad}</p>
-                                    </div>
-                                    <p className="font-semibold">
-                                      ${(producto.precio * producto.cantidad).toLocaleString()}
-                                    </p>
-                                  </div>
-                                ))}
+                            <div className="text-center p-4 bg-gray-50 rounded-lg">
+                              <div className="mb-2">
+                                <Truck className="h-8 w-8 mx-auto text-purple-600" />
                               </div>
-                              <div className="flex justify-between items-center pt-4 border-t">
-                                <span className="text-lg font-bold">Total:</span>
-                                <span className="text-lg font-bold text-green-600">
-                                  ${pedido.total.toLocaleString()}
-                                </span>
-                              </div>
+                              <p className="text-sm font-medium text-gray-700">Envío</p>
+                              <Badge className={`${estadoColors[pedido.estadoEnvio]} text-xs mt-1`}>
+                                {pedido.estadoEnvio}
+                              </Badge>
                             </div>
                           </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
+
+                          <Separator />
+
+                          {/* Información del cliente */}
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-3">Información de Entrega</h3>
+                            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                              <p className="text-sm"><span className="font-medium">Nombre:</span> {pedido.cliente.nombre}</p>
+                              <p className="text-sm"><span className="font-medium">Teléfono:</span> {pedido.cliente.telefono}</p>
+                              <p className="text-sm"><span className="font-medium">Dirección:</span> {pedido.cliente.direccion}</p>
+                            </div>
+                          </div>
+
+                          <Separator />
+
+                          {/* Productos */}
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-3">Productos</h3>
+                            <div className="space-y-2">
+                              {pedido.productos.map((producto) => (
+                                <div key={producto.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                  <div>
+                                    <p className="font-medium text-gray-900">{producto.nombre}</p>
+                                    <p className="text-sm text-gray-600">Cantidad: {producto.cantidad}</p>
+                                  </div>
+                                  <p className="font-medium text-gray-900">${(producto.precio * producto.cantidad).toLocaleString()}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <Separator />
+
+                          {/* Total */}
+                          <div className="flex justify-between items-center text-lg font-medium">
+                            <span>Total del Pedido</span>
+                            <span className="text-blue-600">${pedido.total.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <h4 className="font-semibold text-sm text-gray-600 mb-1">CLIENTE</h4>
-                      <p className="font-medium">{pedido.cliente.nombre}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm text-gray-600 mb-1">PRODUCTOS</h4>
-                      <p>{pedido.productos.length} productos</p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm text-gray-600 mb-1">ESTADOS</h4>
-                      <div className="flex space-x-2">
-                        <Badge className={`${estadoColors[pedido.estadoDespacho]} text-xs`}>Despacho</Badge>
-                        <Badge className={`${estadoColors[pedido.estadoCobro]} text-xs`}>Cobro</Badge>
-                        <Badge className={`${estadoColors[pedido.estadoEnvio]} text-xs`}>Envío</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
