@@ -25,7 +25,14 @@ export interface Pedido {
   id: number;
   idCliente: number;
   fechaPedido: string;
-  estado: "PENDIENTE_APROBACION" | "Cancelado" | "Enviado" | "Listo para despachar" | "Listo para pagar" | "Procesando" | "Recibido";
+  estado:
+    | "PENDIENTE_APROBACION"
+    | "Cancelado"
+    | "Enviado"
+    | "Listo para despachar"
+    | "Listo para pagar"
+    | "Procesando"
+    | "Recibido";
   total: number;
   eliminado: boolean;
   detalles: DetallePedido[];
@@ -47,7 +54,12 @@ export interface PedidoRequest {
 export interface Despacho {
   id: number;
   idPedido: number;
-  estado: "PENDIENTE" | "EN_PROCESO" | "LISTO_PARA_ENVIO" | "ENVIADO" | "ENTREGADO";
+  estado:
+    | "PENDIENTE"
+    | "EN_PROCESO"
+    | "LISTO_PARA_ENVIO"
+    | "ENVIADO"
+    | "ENTREGADO";
   observacion: string;
   fechaCreacion: string;
   fechaActualizacion: string;
@@ -57,8 +69,9 @@ export interface Cobro {
   id: number;
   idPedido: number;
   monto: number;
-  metodoPago: string;
-  estado: "PENDIENTE" | "PROCESANDO" | "PAGADO" | "RECHAZADO";
+  metodoPago: "EFECTIVO" | "TARJETA" | "TRANSFERENCIA";
+  estado: "PENDIENTE" | "PAGADO" | "FALLIDO";
+  referenciaPago: string;
   datosPago: any;
   fechaCreacion: string;
   fechaActualizacion: string;

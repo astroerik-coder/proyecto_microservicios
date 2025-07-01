@@ -29,9 +29,11 @@ interface OrdersContextType {
     pedidoId: number,
     monto: number,
     metodoPago: string,
-    datosPago: any
-  ) => Promise<void>;
+    referenciaPago: string,
+    datosPago?: any
+  ) => Promise<any>;
   procesarCobro: (cobroId: number) => Promise<void>;
+  marcarCobroFallido: (cobroId: number) => Promise<void>;
   // Función para cargar todos los pedidos (admin)
   loadAllPedidos: () => Promise<void>;
 }
@@ -260,23 +262,30 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     pedidoId: number,
     monto: number,
     metodoPago: string,
-    datosPago: any
+    referenciaPago: string,
+    datosPago?: any
   ) => {
     setLoading(true);
     setError(null);
 
     try {
-      await cobrosAPI.createCobro({
+      const response = await cobrosAPI.createCobro({
         idPedido: pedidoId,
         monto,
         metodoPago,
+        referenciaPago,
         datosPago,
       });
+      
+      // Recargar pedidos después de crear el cobro
       if (user?.rol === "ADMIN") {
         await loadAllPedidos();
       } else {
         await loadPedidos();
       }
+      
+      // Devolver la respuesta del API que incluye el ID del cobro
+      return response;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al crear cobro");
       throw err;
@@ -298,6 +307,25 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al procesar cobro");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const marcarCobroFallido = async (cobroId: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await cobrosAPI.marcarCobroFallido(cobroId);
+      if (user?.rol === "ADMIN") {
+        await loadAllPedidos();
+      } else {
+        await loadPedidos();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al marcar cobro como fallido");
       throw err;
     } finally {
       setLoading(false);
@@ -347,6 +375,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
         avanzarDespacho,
         createCobro,
         procesarCobro,
+        marcarCobroFallido,
         loadAllPedidos,
       }}
     >

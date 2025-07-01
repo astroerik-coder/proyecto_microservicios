@@ -9,6 +9,7 @@ import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
+import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 
 /**
@@ -26,7 +27,6 @@ public class RabbitMQConfig {
     // Exchange principal que conecta todos los servicios por eventos
     public static final String EXCHANGE = "pedido.exchange";
 
-   
     // Cola principal que escucha solicitudes de productos desde pedidos
     public static final String QUEUE_PRODUCTO_CONSULTAR = "producto.consultar.queue";
     public static final String ROUTING_PRODUCTO_CONSULTAR = "producto.consultar";
@@ -47,7 +47,13 @@ public class RabbitMQConfig {
      */
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
+
+        // Configurar los paquetes de confianza para deserialización segura
+        DefaultClassMapper classMapper = new DefaultClassMapper();
+        classMapper.setTrustedPackages("*"); // Confiar en todos los paquetes
+
+        return converter;
     }
 
     /**

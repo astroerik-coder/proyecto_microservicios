@@ -348,7 +348,8 @@ export const cobrosAPI = {
     idPedido: number;
     monto: number;
     metodoPago: string;
-    datosPago: any;
+    referenciaPago: string;
+    datosPago?: any;
   }) => {
     const response = await fetch(`${API_COBROS}/cobros`, {
       method: "POST",
@@ -400,6 +401,21 @@ export const cobrosAPI = {
     if (!response.ok) {
       const error = await response.text();
       throw new Error(`Error al procesar cobro: ${error}`);
+    }
+
+    return response.json();
+  },
+
+  // Marcar cobro como fallido
+  marcarCobroFallido: async (cobroId: number) => {
+    const response = await fetch(`${API_COBROS}/cobros/${cobroId}/fallar`, {
+      method: "POST",
+      headers: getHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Error al marcar cobro como fallido: ${error}`);
     }
 
     return response.json();

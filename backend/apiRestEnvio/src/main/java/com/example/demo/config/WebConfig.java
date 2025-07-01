@@ -12,7 +12,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         // Permitir solicitudes CORS desde cualquier origen (localhost:3000)
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000") // Cambia esto por la URL de tu frontend si es diferente
+                .allowedOrigins("*") 
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

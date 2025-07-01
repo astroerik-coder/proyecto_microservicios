@@ -46,8 +46,8 @@ export default function CartSummaryModal({ cart, total, onClose, onConfirm }: Ca
               <Button variant="outline" onClick={onClose} className="flex-1">
                 Cancelar
               </Button>
-              <Button onClick={onConfirm} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                Confirmar Pedido
+              <Button onClick={onConfirm} className="flex-1 bg-green-600 hover:bg-green-700">
+                Enviar Pedido
               </Button>
             </div>
           </CardContent>

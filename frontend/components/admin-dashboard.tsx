@@ -47,6 +47,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import Link from "next/link";
 import PedidosTable from "@/components/pedidos/pedidos-table";
 import { useRealtimeUpdates } from "@/hooks/use-realtime-updates";
+import CobrosTable from "@/components/cobros/cobros-table";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -57,6 +58,7 @@ export default function AdminDashboard() {
     avanzarDespacho, 
     createCobro, 
     procesarCobro,
+    marcarCobroFallido,
     updatePedidoEstado,
     deletePedido,
     approvePedido,
@@ -73,10 +75,11 @@ export default function AdminDashboard() {
   const [showCobroModal, setShowCobroModal] = useState(false);
   const [selectedPedidoForAction, setSelectedPedidoForAction] = useState<PedidoCompleto | null>(null);
   const [despachoData, setDespachoData] = useState({ observacion: "" });
-  const [cobroData, setCobroData] = useState({ 
-    monto: 0, 
-    metodoPago: "tarjeta", 
-    datosPago: {} 
+  const [cobroData, setCobroData] = useState({
+    monto: 0,
+    metodoPago: "TARJETA",
+    referenciaPago: "",
+    datosPago: {}
   });
 
   const { registerUpdateCallback, updateSpecificPedido, updateDespachos, updateCobros, updateStats } = useRealtimeUpdates();
@@ -208,9 +211,8 @@ export default function AdminDashboard() {
       variant: "secondary" | "default" | "outline" | "destructive";
     }> = {
       "PENDIENTE": { label: "Pendiente", variant: "secondary" },
-      "PROCESANDO": { label: "Procesando", variant: "default" },
       "PAGADO": { label: "Pagado", variant: "outline" },
-      "RECHAZADO": { label: "Rechazado", variant: "destructive" },
+      "FALLIDO": { label: "Fallido", variant: "destructive" },
     };
 
     const config = statusConfig[estado] || statusConfig["PENDIENTE"];
@@ -306,10 +308,11 @@ export default function AdminDashboard() {
         selectedPedidoForAction.id, 
         cobroData.monto, 
         cobroData.metodoPago, 
+        cobroData.referenciaPago,
         cobroData.datosPago
       );
       setShowCobroModal(false);
-      setCobroData({ monto: 0, metodoPago: "tarjeta", datosPago: {} });
+      setCobroData({ monto: 0, metodoPago: "TARJETA", referenciaPago: "", datosPago: {} });
       setSelectedPedidoForAction(null);
       setAlert({
         show: true,
@@ -342,6 +345,25 @@ export default function AdminDashboard() {
         type: "error",
         title: "Error",
         message: "No se pudo procesar el cobro.",
+      });
+    }
+  };
+
+  const handleMarcarCobroFallido = async (cobroId: number) => {
+    try {
+      await marcarCobroFallido(cobroId);
+      setAlert({
+        show: true,
+        type: "success",
+        title: "Cobro Marcado como Fallido",
+        message: "El cobro ha sido marcado como fallido exitosamente.",
+      });
+    } catch (error) {
+      setAlert({
+        show: true,
+        type: "error",
+        title: "Error",
+        message: "No se pudo marcar el cobro como fallido.",
       });
     }
   };
@@ -446,6 +468,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="orders">Gestión de Pedidos</TabsTrigger>
             <TabsTrigger value="inventory">Inventario</TabsTrigger>
             <TabsTrigger value="despachos">Despachos</TabsTrigger>
+            <TabsTrigger value="cobros">Cobros</TabsTrigger>
             <TabsTrigger value="overview">Resumen</TabsTrigger>
           </TabsList>
 
@@ -579,6 +602,26 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="cobros">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Gestión de Cobros
+                </CardTitle>
+                <CardDescription>
+                  Administra y controla el estado de los cobros
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CobrosTable 
+                  onProcesarCobro={handleProcesarCobro}
+                  onMarcarFallido={handleMarcarCobroFallido}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="overview">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -655,6 +698,7 @@ export default function AdminDashboard() {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onStatusUpdate={handleStatusUpdate}
+          onProcesarCobro={handleProcesarCobro}
         />
       )}
 
@@ -712,12 +756,20 @@ export default function AdminDashboard() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tarjeta">Tarjeta de Crédito</SelectItem>
-                  <SelectItem value="debito">Tarjeta de Débito</SelectItem>
-                  <SelectItem value="transferencia">Transferencia</SelectItem>
-                  <SelectItem value="efectivo">Efectivo</SelectItem>
+                  <SelectItem value="TARJETA">Tarjeta de Crédito/Débito</SelectItem>
+                  <SelectItem value="EFECTIVO">Efectivo</SelectItem>
+                  <SelectItem value="TRANSFERENCIA">Transferencia Bancaria</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="referenciaPago">Referencia de Pago</Label>
+              <Input
+                id="referenciaPago"
+                value={cobroData.referenciaPago}
+                onChange={(e) => setCobroData({ ...cobroData, referenciaPago: e.target.value })}
+                placeholder="Ej: ticket-123, transfer-456..."
+              />
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setShowCobroModal(false)}>

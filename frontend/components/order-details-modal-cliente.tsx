@@ -19,7 +19,7 @@ function TrackingModalCliente({ pedido, onClose }: { pedido: Pedido; onClose: ()
           </DialogTitle>
         </DialogHeader>
         <ShipmentTracking
-          estado={pedido.estado}
+          estado={pedido.estado as "Recibido" | "Procesando" | "Listo para despachar" | "Listo para pagar" | "Enviado" | "Cancelado"}
           fechaPedido={pedido.fechaPedido}
           fechaActualizacion={pedido.actualizado_en}
         />

@@ -18,7 +18,7 @@ import TabsCliente from "@/components/client-tabs";
 
 export default function ClientDashboard() {
   const { user, logout } = useAuth();
-  const { pedidos, loading, createPedido, deletePedido, createCobro } =
+  const { pedidos, loading, createPedido, deletePedido, createCobro, procesarCobro } =
     useOrders();
   const { inventory } = useInventory();
   const { cart, addToCart, removeFromCart, clearCart, getCartTotal } =
@@ -265,21 +265,29 @@ export default function ClientDashboard() {
             setShowPayment(false);
             setPaymentPedido(null);
           }}
-          onSuccess={async () => {
+          onSuccess={async (referenciaPago, metodoPago) => {
             if (paymentPedido) {
               // Crear cobro para el pedido existente
               try {
-                await createCobro(
+                // Crear el cobro y obtener la respuesta con el ID
+                const cobroCreado = await createCobro(
                   paymentPedido.id,
                   paymentPedido.total,
-                  "tarjeta",
+                  metodoPago || "EFECTIVO",
+                  referenciaPago || `REF-${Date.now()}-${paymentPedido.id}`,
                   {}
                 );
+
+                // Procesar el cobro automáticamente usando el ID devuelto
+                if (cobroCreado && cobroCreado.id) {
+                  await procesarCobro(cobroCreado.id);
+                }
+
                 setAlert({
                   show: true,
                   type: "success",
                   title: "Pago realizado",
-                  message: "El pago se ha realizado correctamente.",
+                  message: "El pago se ha procesado correctamente.",
                 });
               } catch (error) {
                 setAlert({

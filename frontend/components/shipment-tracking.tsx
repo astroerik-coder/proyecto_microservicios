@@ -7,9 +7,15 @@ interface ShipmentTrackingProps {
   estado: "Cancelado" | "Enviado" | "Listo para despachar" | "Listo para pagar" | "Procesando" | "Recibido";
   fechaPedido: string;
   fechaActualizacion?: string;
+  cobro?: {
+    estado: "PENDIENTE" | "PAGADO" | "FALLIDO";
+    monto: number;
+    metodoPago: string;
+    referenciaPago: string;
+  };
 }
 
-export default function ShipmentTracking({ estado, fechaPedido, fechaActualizacion }: ShipmentTrackingProps) {
+export default function ShipmentTracking({ estado, fechaPedido, fechaActualizacion, cobro }: ShipmentTrackingProps) {
   const steps = [
     {
       id: "recibido",
@@ -67,6 +73,8 @@ export default function ShipmentTracking({ estado, fechaPedido, fechaActualizaci
         return "text-gray-400 bg-gray-50 border-gray-200";
       case "cancelled":
         return "text-red-600 bg-red-50 border-red-200";
+      default:
+        return "text-gray-400 bg-gray-50 border-gray-200";
     }
   };
 
@@ -80,6 +88,8 @@ export default function ShipmentTracking({ estado, fechaPedido, fechaActualizaci
         return "text-gray-400";
       case "cancelled":
         return "text-red-600";
+      default:
+        return "text-gray-400";
     }
   };
 
@@ -98,6 +108,39 @@ export default function ShipmentTracking({ estado, fechaPedido, fechaActualizaci
 
     const config = statusConfig[estado] || statusConfig["Recibido"];
     return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const getCobroStatusBadge = (estado: string) => {
+    const statusConfig: Record<string, {
+      label: string;
+      variant: "secondary" | "default" | "outline" | "destructive";
+      icon: React.ComponentType<{ className?: string }>;
+    }> = {
+      "PENDIENTE": { 
+        label: "Pendiente", 
+        variant: "secondary",
+        icon: Clock
+      },
+      "PAGADO": { 
+        label: "Pagado", 
+        variant: "outline",
+        icon: CheckCircle
+      },
+      "FALLIDO": { 
+        label: "Fallido", 
+        variant: "destructive",
+        icon: XCircle
+      },
+    };
+
+    const config = statusConfig[estado] || statusConfig["PENDIENTE"];
+    const Icon = config.icon;
+    return (
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4" />
+        <Badge variant={config.variant}>{config.label}</Badge>
+      </div>
+    );
   };
 
   const formatDate = (dateString: string) => {
@@ -138,61 +181,92 @@ export default function ShipmentTracking({ estado, fechaPedido, fechaActualizaci
       </div>
 
       <div className="space-y-6">
-        {steps.map((step, index) => {
-          const Icon = step.icon;
-          const isLast = index === steps.length - 1;
-          
-          return (
-            <div key={step.id} className="flex items-start">
-              <div className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${getStatusColor(step.status)}`}>
-                  {step.status === "completed" ? (
-                    <CheckCircle className={`w-5 h-5 ${getIconColor(step.status)}`} />
-                  ) : step.status === "cancelled" ? (
-                    <XCircle className={`w-5 h-5 ${getIconColor(step.status)}`} />
-                  ) : (
-                    <Icon className={`w-5 h-5 ${getIconColor(step.status)}`} />
+        {/* Flujo de trabajo visual */}
+        <div className="space-y-4">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isLast = index === steps.length - 1;
+            
+            return (
+              <div key={step.id} className="flex items-start">
+                <div className="flex items-center">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${getStatusColor(step.status as "completed" | "current" | "pending" | "cancelled")}`}>
+                    {step.status === "completed" ? (
+                      <CheckCircle className={`w-5 h-5 ${getIconColor(step.status as "completed" | "current" | "pending" | "cancelled")}`} />
+                    ) : step.status === "cancelled" ? (
+                      <XCircle className={`w-5 h-5 ${getIconColor(step.status as "completed" | "current" | "pending" | "cancelled")}`} />
+                    ) : (
+                      <Icon className={`w-5 h-5 ${getIconColor(step.status as "completed" | "current" | "pending" | "cancelled")}`} />
+                    )}
+                  </div>
+                  {!isLast && (
+                    <div className={`w-0.5 h-12 ml-5 ${
+                      step.status === "completed" ? "bg-green-200" : 
+                      step.status === "cancelled" ? "bg-red-200" : "bg-gray-200"
+                    }`} />
                   )}
                 </div>
-                {!isLast && (
-                  <div className={`w-0.5 h-12 ml-5 ${
-                    step.status === "completed" ? "bg-green-200" : 
-                    step.status === "cancelled" ? "bg-red-200" : "bg-gray-200"
-                  }`} />
-                )}
-              </div>
-              <div className="ml-4 flex-1">
-                <h4 className={`font-medium ${
-                  step.status === "completed" ? "text-green-800" :
-                  step.status === "current" ? "text-blue-800" :
-                  step.status === "cancelled" ? "text-red-800" : "text-gray-500"
-                }`}>
-                  {step.label}
-                </h4>
-                <p className={`text-sm ${
-                  step.status === "completed" ? "text-green-600" :
-                  step.status === "current" ? "text-blue-600" :
-                  step.status === "cancelled" ? "text-red-600" : "text-gray-400"
-                }`}>
-                  {step.description}
-                </p>
-                {step.status === "current" && (
-                  <p className="text-xs text-blue-500 mt-1">
-                    En progreso...
+                <div className="ml-4 flex-1">
+                  <h4 className={`font-medium ${
+                    step.status === "completed" ? "text-green-800" :
+                    step.status === "current" ? "text-blue-800" :
+                    step.status === "cancelled" ? "text-red-800" : "text-gray-500"
+                  }`}>
+                    {step.label}
+                  </h4>
+                  <p className={`text-sm ${
+                    step.status === "completed" ? "text-green-600" :
+                    step.status === "current" ? "text-blue-600" :
+                    step.status === "cancelled" ? "text-red-600" : "text-gray-400"
+                  }`}>
+                    {step.description}
                   </p>
-                )}
+                  {step.status === "current" && (
+                    <p className="text-xs text-blue-500 mt-1">
+                      En progreso...
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Información del cobro si existe */}
+        {cobro && (
+          <div className="border-t pt-4">
+            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+              <CreditCard className="w-4 h-4" />
+              Estado del Pago
+            </h4>
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Estado:</span>
+                {getCobroStatusBadge(cobro.estado)}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Monto:</span>
+                <span className="text-sm font-medium">${cobro.monto.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Método:</span>
+                <span className="text-sm font-medium capitalize">{cobro.metodoPago}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Referencia:</span>
+                <span className="text-sm font-medium">{cobro.referenciaPago}</span>
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        )}
 
-      <div className="mt-6 pt-4 border-t border-gray-200">
-        <div className="text-sm text-gray-600">
-          <p><strong>Fecha de pedido:</strong> {formatDate(fechaPedido)}</p>
-          {fechaActualizacion && (
-            <p><strong>Última actualización:</strong> {formatDate(fechaActualizacion)}</p>
-          )}
+        <div className="border-t pt-4">
+          <div className="text-sm text-gray-600">
+            <p><strong>Fecha de pedido:</strong> {formatDate(fechaPedido)}</p>
+            {fechaActualizacion && (
+              <p><strong>Última actualización:</strong> {formatDate(fechaActualizacion)}</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

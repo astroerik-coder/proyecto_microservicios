@@ -1,14 +1,16 @@
 "use client";
 
-import { Package, Truck, CreditCard, AlertTriangle } from "lucide-react";
+import { Package, Truck, CreditCard, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PedidoCompleto } from "@/types/product";
 
 interface AdminShipmentTrackingProps {
   pedido: PedidoCompleto;
+  onProcesarCobro?: (cobroId: number) => Promise<void>;
 }
 
-export default function AdminShipmentTracking({ pedido }: AdminShipmentTrackingProps) {
+export default function AdminShipmentTracking({ pedido, onProcesarCobro }: AdminShipmentTrackingProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -57,15 +59,43 @@ export default function AdminShipmentTracking({ pedido }: AdminShipmentTrackingP
     const statusConfig: Record<string, {
       label: string;
       variant: "secondary" | "default" | "outline" | "destructive";
+      icon: React.ComponentType<{ className?: string }>;
     }> = {
-      "PENDIENTE": { label: "Pendiente", variant: "secondary" },
-      "PROCESANDO": { label: "Procesando", variant: "default" },
-      "PAGADO": { label: "Pagado", variant: "outline" },
-      "RECHAZADO": { label: "Rechazado", variant: "destructive" },
+      "PENDIENTE": { 
+        label: "Pendiente", 
+        variant: "secondary",
+        icon: AlertTriangle
+      },
+      "PAGADO": { 
+        label: "Pagado", 
+        variant: "outline",
+        icon: CheckCircle
+      },
+      "FALLIDO": { 
+        label: "Fallido", 
+        variant: "destructive",
+        icon: XCircle
+      },
     };
 
     const config = statusConfig[estado] || statusConfig["PENDIENTE"];
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    const Icon = config.icon;
+    return (
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4" />
+        <Badge variant={config.variant}>{config.label}</Badge>
+      </div>
+    );
+  };
+
+  const handleProcesarCobro = async (cobroId: number) => {
+    if (onProcesarCobro) {
+      try {
+        await onProcesarCobro(cobroId);
+      } catch (error) {
+        console.error("Error al procesar cobro:", error);
+      }
+    }
   };
 
   return (
@@ -75,7 +105,7 @@ export default function AdminShipmentTracking({ pedido }: AdminShipmentTrackingP
         {getStatusBadge(pedido.estado)}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="space-y-6">
         {/* Estado del Pedido */}
         <div className="space-y-4">
           <h4 className="font-medium text-gray-900 flex items-center gap-2">
@@ -165,9 +195,32 @@ export default function AdminShipmentTracking({ pedido }: AdminShipmentTrackingP
                 <span className="text-sm font-medium capitalize">{pedido.cobro.metodoPago}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span className="text-sm text-gray-600">Referencia:</span>
+                <span className="text-sm font-medium">{pedido.cobro.referenciaPago}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-600">Fecha Creación:</span>
                 <span className="text-sm font-medium">{formatDate(pedido.cobro.fechaCreacion)}</span>
               </div>
+              
+              {/* Botón para procesar cobro si está pendiente */}
+              {pedido.cobro.estado === "PENDIENTE" && onProcesarCobro && (
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-blue-600 font-medium">Acción:</span>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleProcesarCobro(pedido.cobro?.id ?? 0)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Procesar Cobro
+                    </Button>
+                  </div>
+                  <p className="text-xs text-blue-700 mt-1">
+                    Marca este cobro como procesado para avanzar el estado del pedido
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">

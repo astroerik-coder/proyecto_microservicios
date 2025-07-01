@@ -14,9 +14,10 @@ interface OrderDetailsModalProps {
   order: PedidoCompleto
   onClose: () => void
   onStatusUpdate: (orderId: number, status: string) => void
+  onProcesarCobro?: (cobroId: number) => Promise<void>
 }
 
-export default function OrderDetailsModal({ order, onClose, onStatusUpdate }: OrderDetailsModalProps) {
+export default function OrderDetailsModal({ order, onClose, onStatusUpdate, onProcesarCobro }: OrderDetailsModalProps) {
   const [pedido, setPedido] = useState(order)
   const { registerUpdateCallback } = useRealtimeUpdates()
 
@@ -68,7 +69,7 @@ export default function OrderDetailsModal({ order, onClose, onStatusUpdate }: Or
 
         <div className="space-y-6">
           {/* Shipment Tracking Completo */}
-          <AdminShipmentTracking pedido={pedido} />
+          <AdminShipmentTracking pedido={pedido} onProcesarCobro={onProcesarCobro} />
 
           {/* Order Info */}
           <Card>

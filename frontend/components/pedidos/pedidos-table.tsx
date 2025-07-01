@@ -111,9 +111,8 @@ export default function PedidosTable({
       variant: "secondary" | "default" | "outline" | "destructive";
     }> = {
       "PENDIENTE": { label: "Pendiente", variant: "secondary" },
-      "PROCESANDO": { label: "Procesando", variant: "default" },
       "PAGADO": { label: "Pagado", variant: "outline" },
-      "RECHAZADO": { label: "Rechazado", variant: "destructive" },
+      "FALLIDO": { label: "Fallido", variant: "destructive" },
     };
 
     const config = statusConfig[estado] || statusConfig["PENDIENTE"];
