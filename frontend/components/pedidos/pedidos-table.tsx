@@ -20,6 +20,7 @@ import {
   Package,
   Truck,
   CheckCircle,
+  ShoppingCart,
 } from "lucide-react";
 import { PedidoCompleto } from "@/types/product";
 import { useRealtimeUpdates } from "@/hooks/use-realtime-updates";
@@ -28,6 +29,8 @@ import { useToast } from "@/hooks/use-toast";
 interface PedidosTableProps {
   pedidos: PedidoCompleto[];
   onViewOrder: (pedido: PedidoCompleto) => void;
+  onViewEnvio?: (pedido: PedidoCompleto) => void;
+  onTrackPedido?: (pedido: PedidoCompleto) => void;
   onCreateDespacho: (pedido: PedidoCompleto) => void;
   onAvanzarDespacho: (despachoId: number) => Promise<void>;
   onCreateCobro: (pedido: PedidoCompleto) => void;
@@ -40,6 +43,8 @@ interface PedidosTableProps {
 export default function PedidosTable({
   pedidos,
   onViewOrder,
+  onViewEnvio,
+  onTrackPedido,
   onCreateDespacho,
   onAvanzarDespacho,
   onCreateCobro,
@@ -289,7 +294,31 @@ export default function PedidosTable({
                   >
                     <Eye className="w-3 h-3" />
                   </Button>
-
+                  {/* Ver Envío (solo si existe) */}
+                  {pedido.envio  && typeof onViewEnvio === 'function' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewEnvio(pedido)}
+                      title="Ver Envío"
+                      className="flex items-center gap-1"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <ShoppingCart className="w-3 h-3" />
+                    </Button>
+                  )}
+                  {/* Trackeo de Pedido (solo si no está pendiente de aprobación) */}
+                  {typeof onTrackPedido === 'function' && pedido.estado !== 'PENDIENTE_APROBACION' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onTrackPedido(pedido)}
+                      title="Seguimiento del Pedido"
+                      className="flex items-center gap-1"
+                    >
+                      <Truck className="w-3 h-3" />
+                    </Button>
+                  )}
                   {/* Aprobar Pedido (solo admin) */}
                   {isAdmin && pedido.estado === "PENDIENTE_APROBACION" && onApprovePedido && (
                     <Button

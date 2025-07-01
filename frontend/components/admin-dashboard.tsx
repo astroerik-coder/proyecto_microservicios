@@ -48,6 +48,8 @@ import Link from "next/link";
 import PedidosTable from "@/components/pedidos/pedidos-table";
 import { useRealtimeUpdates } from "@/hooks/use-realtime-updates";
 import CobrosTable from "@/components/cobros/cobros-table";
+import EnviosTable from "@/components/envios/envios-table";
+import CrearEnvioModal from "@/components/envios/crear-envio-modal";
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -93,6 +95,9 @@ export default function AdminDashboard() {
     shippedOrders: 0,
     totalRevenue: 0,
   });
+
+  const [showCrearEnvio, setShowCrearEnvio] = useState(false);
+  const [despachoIdParaEnvio, setDespachoIdParaEnvio] = useState<number | null>(null);
 
   // Actualizar stats solo cuando cambie algo relevante
   useEffect(() => {
@@ -469,6 +474,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="inventory">Inventario</TabsTrigger>
             <TabsTrigger value="despachos">Despachos</TabsTrigger>
             <TabsTrigger value="cobros">Cobros</TabsTrigger>
+            <TabsTrigger value="envios">Envíos</TabsTrigger>
             <TabsTrigger value="overview">Resumen</TabsTrigger>
           </TabsList>
 
@@ -622,6 +628,23 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="envios">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Truck className="w-5 h-5" />
+                  Gestión de Envíos
+                </CardTitle>
+                <CardDescription>
+                  Administra y controla el estado de los envíos
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <EnviosTable />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="overview">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -699,6 +722,17 @@ export default function AdminDashboard() {
           onClose={() => setSelectedOrder(null)}
           onStatusUpdate={handleStatusUpdate}
           onProcesarCobro={handleProcesarCobro}
+          extraActions={selectedOrder.despacho && !selectedOrder.envio ? (
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700"
+              onClick={() => {
+                setDespachoIdParaEnvio(selectedOrder.despacho?.id || 0);
+                setShowCrearEnvio(true);
+              }}
+            >
+              Crear Envío
+            </Button>
+          ) : null}
         />
       )}
 
@@ -782,6 +816,20 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal para crear envío */}
+      {showCrearEnvio && despachoIdParaEnvio && (
+        <CrearEnvioModal
+          idDespacho={despachoIdParaEnvio}
+          open={showCrearEnvio}
+          onClose={() => setShowCrearEnvio(false)}
+          onSuccess={() => {
+            setShowCrearEnvio(false);
+            setDespachoIdParaEnvio(null);
+            // Recargar pedidos/envíos si es necesario
+          }}
+        />
+      )}
 
       <AlertModal
         show={alert.show}

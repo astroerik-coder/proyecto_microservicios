@@ -2,10 +2,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardHeader as CardHeaderUI, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package } from "lucide-react";
+import { Package, ShoppingCart, Eye } from "lucide-react";
 import { Pedido } from "@/types/product";
 import { useState } from "react";
 import ShipmentTracking from "@/components/shipment-tracking";
+import EnvioTracking from "@/components/envio-tracking";
 
 // Tracking visual para el cliente usando el mismo componente que el tracking general
 function TrackingModalCliente({ pedido, onClose }: { pedido: Pedido; onClose: () => void }) {
@@ -50,6 +51,9 @@ function formatDate(dateString: string) {
 
 export default function OrderDetailsModalCliente({ pedido, onClose }: OrderDetailsModalClienteProps) {
   const [showTracking, setShowTracking] = useState(false);
+  const [showEnvioTracking, setShowEnvioTracking] = useState(false);
+  // Simulación: obtener info de envío desde pedido.envio (ajusta según tu modelo real)
+  const envio = (pedido as any).envio;
   return (
     <>
       <Dialog open={true} onOpenChange={onClose}>
@@ -96,6 +100,13 @@ export default function OrderDetailsModalCliente({ pedido, onClose }: OrderDetai
                 <Button onClick={() => setShowTracking(true)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
                   Ver Seguimiento
                 </Button>
+                {envio && (
+                  <Button onClick={() => setShowEnvioTracking(true)} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    <ShoppingCart className="w-4 h-4" />
+                    <span>Ver Envío</span>
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -103,6 +114,30 @@ export default function OrderDetailsModalCliente({ pedido, onClose }: OrderDetai
       </Dialog>
       {showTracking && (
         <TrackingModalCliente pedido={pedido} onClose={() => setShowTracking(false)} />
+      )}
+      {showEnvioTracking && envio && (
+        <Dialog open={true} onOpenChange={() => setShowEnvioTracking(false)}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Package className="w-5 h-5" />
+                Seguimiento del Envío
+              </DialogTitle>
+            </DialogHeader>
+            <EnvioTracking
+              estado={envio.estado}
+              transportista={envio.transportista}
+              guiaSeguimiento={envio.guiaSeguimiento}
+              fechaEnvio={envio.creado_en}
+              fechaActualizacion={envio.actualizado_en}
+            />
+            <div className="flex gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowEnvioTracking(false)} className="flex-1">
+                Cerrar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );

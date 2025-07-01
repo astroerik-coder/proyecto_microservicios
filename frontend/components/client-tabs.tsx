@@ -14,6 +14,7 @@ import {
   Package,
   Plus,
   Minus,
+  Truck,
 } from "lucide-react";
 import { InventarioClient } from "./inventario/inventario-client";
 import PedidosTable from "./pedidos/pedidos-table";
@@ -21,6 +22,9 @@ import { Button } from "@/components/ui/button";
 import { Product, Pedido } from "@/types/product";
 import React, { useState } from "react";
 import OrderDetailsModalCliente from "./order-details-modal-cliente";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import EnvioTracking from "@/components/envio-tracking";
+import ShipmentTracking from "@/components/shipment-tracking";
 
 interface TabsClienteProps {
   paginatedInventory: Product[];
@@ -62,6 +66,8 @@ export default function TabsCliente({
   deletePedido,
 }: TabsClienteProps) {
   const [selectedPedido, setSelectedPedido] = useState<any | null>(null);
+  const [selectedEnvioPedido, setSelectedEnvioPedido] = useState<any | null>(null);
+  const [selectedTrackPedido, setSelectedTrackPedido] = useState<any | null>(null);
 
   return (
     <Tabs defaultValue="products" className="space-y-6">
@@ -236,6 +242,8 @@ export default function TabsCliente({
               <PedidosTable
                 pedidos={pedidos}
                 onViewOrder={setSelectedPedido}
+                onViewEnvio={setSelectedEnvioPedido}
+                onTrackPedido={setSelectedTrackPedido}
                 onCreateDespacho={() => {}}
                 onAvanzarDespacho={async () => {}}
                 onCreateCobro={handleCreateCobroCliente}
@@ -251,6 +259,36 @@ export default function TabsCliente({
                 onClose={() => setSelectedPedido(null)}
               />
             )}
+            {/* Modal solo de envío */}
+            {selectedEnvioPedido && selectedEnvioPedido.envio && (
+              <Dialog open={true} onOpenChange={() => setSelectedEnvioPedido(null)}>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5" />
+                      {selectedEnvioPedido.envio.id ? (
+                        <>
+                          Envío #{selectedEnvioPedido.envio.id}
+                        </>
+                      ) : (
+                        <>Seguimiento del Envío</>
+                      )}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <EnvioTracking
+                    estado={selectedEnvioPedido.envio.estado}
+                    transportista={selectedEnvioPedido.envio.transportista}
+                    guiaSeguimiento={selectedEnvioPedido.envio.guiaSeguimiento}
+                    fechaEnvio={selectedEnvioPedido.envio.creado_en}
+                    fechaActualizacion={selectedEnvioPedido.envio.actualizado_en}
+                  />
+                  <div className="flex gap-2 pt-4">
+                    <button onClick={() => setSelectedEnvioPedido(null)} className="flex-1 border rounded px-4 py-2 bg-gray-50 hover:bg-gray-100">Cerrar</button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+
           </CardContent>
         </Card>
       </TabsContent>
