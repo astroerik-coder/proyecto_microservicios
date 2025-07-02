@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  rabbit1:
+    container_name: rabbitMQ
+    image: "rabbitmq:management"
+    environment:
+      RABBITMQ_DEFAULT_USER: "admin"
+      RABBITMQ_DEFAULT_PASS: "admin"
+      RABBITMQ_DEFAULT_VHOST: "/"
+    ports:
+      - "15672:15672"  # Acceso web
+      - "5672:5672"    # Puerto AMQP
+    volumes:
+      - "rabbitmq_data:/var/lib/rabbitmq"  # Persistencia básica
+
+volumes:
+  rabbitmq_data:
